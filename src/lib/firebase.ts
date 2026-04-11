@@ -169,12 +169,6 @@ export async function postGig(gigData: any) {
   return docRef.id
 }
 
-export async function getGigs() {
-  const q = query(collection(db, 'gigs'), orderBy('createdAt', 'desc'), limit(30))
-  const snap = await getDocs(q)
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
-}
-
 // ═══ GIG ORDERS ═══
 
 export async function placeGigOrder(gigId: string, buyerId: string, sellerId: string, gigTitle: string, price: number) {

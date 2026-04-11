@@ -257,5 +257,101 @@ export function listenToUserProfile(uid: string, callback: (data: any) => void) 
   })
 }
 
+// ═══ SAVE/UNSAVE JOBS ═══
+
+export async function saveJob(userId: string, jobId: string) {
+  await setDoc(doc(db, 'saved_jobs', `${userId}_${jobId}`), {
+    userId,
+    jobId,
+    savedAt: serverTimestamp(),
+  })
+}
+
+export async function unsaveJob(userId: string, jobId: string) {
+  const { deleteDoc } = await import('firebase/firestore')
+  await deleteDoc(doc(db, 'saved_jobs', `${userId}_${jobId}`))
+}
+
+export async function getSavedJobs(userId: string) {
+  const q = query(collection(db, 'saved_jobs'), where('userId', '==', userId))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => d.data().jobId)
+}
+
+// ═══ NOTIFICATIONS ═══
+
+export async function addNotification(userId: string, notif: { type: string, title: string, body: string, icon?: string }) {
+  await addDoc(collection(db, 'notifications'), {
+    userId,
+    ...notif,
+    read: false,
+    createdAt: serverTimestamp(),
+  })
+}
+
+export async function getNotifications(userId: string) {
+  const q = query(collection(db, 'notifications'), where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(30))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+export async function markNotificationRead(notifId: string) {
+  await updateDoc(doc(db, 'notifications', notifId), { read: true })
+}
+
+// ═══ REFERRAL SYSTEM ═══
+
+export async function processReferral(referrerId: string, newUserId: string) {
+  // Record the referral
+  await addDoc(collection(db, 'referrals'), {
+    referrerId,
+    referredId: newUserId,
+    coinsEarned: 25,
+    createdAt: serverTimestamp(),
+  })
+  // Credit coins to referrer
+  const referrerDoc = await getDoc(doc(db, 'users', referrerId))
+  if (referrerDoc.exists()) {
+    const currentCoins = referrerDoc.data().coins || 0
+    const currentCount = referrerDoc.data().referralCount || 0
+    await updateDoc(doc(db, 'users', referrerId), {
+      coins: currentCoins + 25,
+      referralCount: currentCount + 1,
+    })
+    await addTransaction(referrerId, {
+      type: 'credit',
+      title: 'Referral Bonus',
+      description: 'New friend joined!',
+      amount: 25,
+      unit: 'coins',
+      icon: '🎁',
+    })
+  }
+}
+
+export async function getReferralByCode(code: string) {
+  const q = query(collection(db, 'users'), where('referralCode', '==', code), limit(1))
+  const snap = await getDocs(q)
+  if (snap.empty) return null
+  return { id: snap.docs[0].id, ...snap.docs[0].data() }
+}
+
+// ═══ SEARCH JOBS ═══
+
+export async function searchJobs(searchTerm: string) {
+  // Get all active jobs and filter client-side (for MVP — later use Algolia)
+  const q = query(collection(db, 'jobs'), where('status', '==', 'active'), orderBy('createdAt', 'desc'), limit(50))
+  const snap = await getDocs(q)
+  const jobs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  const term = searchTerm.toLowerCase()
+  return jobs.filter((j: any) =>
+    j.title?.toLowerCase().includes(term) ||
+    j.company?.toLowerCase().includes(term) ||
+    j.location?.toLowerCase().includes(term) ||
+    j.skills?.some((s: string) => s.toLowerCase().includes(term))
+  )
+}
+
 // Re-export types
 export type { User }
+

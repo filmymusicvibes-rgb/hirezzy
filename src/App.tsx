@@ -238,24 +238,24 @@ function JobsFeedPage({ jobs, savedJobIds, onJobClick, onSaveJob }: { jobs: any[
   const [searchQuery, setSearchQuery] = useState('')
   const [locFilter, setLocFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
+  const [sortBy, setSortBy] = useState('newest')
 
   const filtered = jobs.filter((j: any) => {
-    // Category filter
     if (activeCategory !== 'all' && j.category !== activeCategory) return false
-    // Search filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
-      const matchTitle = (j.title || '').toLowerCase().includes(q)
-      const matchCompany = (j.company || '').toLowerCase().includes(q)
-      const matchSkills = (j.skills || []).some((s: string) => s.toLowerCase().includes(q))
-      const matchLocation = (j.location || '').toLowerCase().includes(q)
-      if (!matchTitle && !matchCompany && !matchSkills && !matchLocation) return false
+      if (!(j.title || '').toLowerCase().includes(q) && !(j.company || '').toLowerCase().includes(q) && !(j.skills || []).some((s: string) => s.toLowerCase().includes(q)) && !(j.location || '').toLowerCase().includes(q)) return false
     }
-    // Location filter
     if (locFilter && !(j.location || '').toLowerCase().includes(locFilter.toLowerCase())) return false
-    // Type filter
-    if (typeFilter && j.type !== typeFilter) return false
+    if (typeFilter && j.remote !== typeFilter) return false
     return true
+  })
+
+  // Sort
+  const sorted = [...filtered].sort((a: any, b: any) => {
+    if (sortBy === 'salary') return (b.salaryMin || 0) - (a.salaryMin || 0)
+    if (sortBy === 'featured') return (b.featured ? 1 : 0) - (a.featured ? 1 : 0)
+    return 0 // newest = default Firestore order
   })
 
   return (
@@ -281,8 +281,8 @@ function JobsFeedPage({ jobs, savedJobIds, onJobClick, onSaveJob }: { jobs: any[
         ))}
       </div>
 
-      {/* ─── Quick Filters ─── */}
-      <div className="filter-chips" style={{ marginBottom: '12px' }}>
+      {/* ─── Quick Filters + Sort ─── */}
+      <div className="filter-chips" style={{ marginBottom: '8px' }}>
         {['Remote', 'Hybrid', 'On-site'].map(t => (
           <span key={t} className={`filter-chip ${typeFilter === t ? 'filter-chip--active' : ''}`} onClick={() => setTypeFilter(typeFilter === t ? '' : t)}>
             {t === 'Remote' ? '🏠' : t === 'Hybrid' ? '🔄' : '🏢'} {t}
@@ -293,10 +293,17 @@ function JobsFeedPage({ jobs, savedJobIds, onJobClick, onSaveJob }: { jobs: any[
         ))}
       </div>
 
-      {/* ─── Results ─── */}
-      <p className="text-sm text-muted mb-2">{filtered.length} jobs found{searchQuery ? ` for "${searchQuery}"` : ''}</p>
+      {/* ─── Sort ─── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <p className="text-sm text-muted">{sorted.length} jobs{searchQuery ? ` for "${searchQuery}"` : ''}</p>
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', padding: '4px 8px', fontSize: '0.75rem', color: 'var(--text-primary)' }}>
+          <option value="newest">⏰ Newest</option>
+          <option value="salary">💰 Salary ↓</option>
+          <option value="featured">⭐ Featured</option>
+        </select>
+      </div>
 
-      {filtered.length === 0 && (
+      {sorted.length === 0 && (
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🔍</div>
           <p style={{ fontWeight: 600, marginBottom: '4px' }}>No jobs found</p>
@@ -304,17 +311,20 @@ function JobsFeedPage({ jobs, savedJobIds, onJobClick, onSaveJob }: { jobs: any[
         </div>
       )}
 
-      {filtered.map((job: any) => (
-        <div key={job.id} className="job-card-v2 fade-in" onClick={() => onJobClick(job)}>
+      {sorted.map((job: any) => (
+        <div key={job.id} className="job-card-v2 fade-in" onClick={() => onJobClick(job)} style={job.featured ? { borderColor: '#FDCB6E', borderWidth: '1.5px' } : {}}>
+          {job.featured && <div style={{ position: 'absolute', top: '8px', right: '8px', background: 'linear-gradient(135deg, #FDCB6E, #E17055)', color: '#fff', fontSize: '0.6rem', padding: '2px 8px', borderRadius: '8px', fontWeight: 700 }}>⭐ FEATURED</div>}
           <div className="job-card-v2__left">
             <div className="job-card-v2__icon">{job.logo || '💼'}</div>
             <div className="job-card-v2__info">
               <div className="job-card-v2__title">{job.title}</div>
               <div className="job-card-v2__company">{job.company} <span className="job-card-v2__remote">• {job.remote}</span>{job.verified && <span className="verified-badge" style={{ marginLeft: '6px', fontSize: '0.65rem' }}>✓</span>}</div>
+              {job.skills && <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>{(job.skills || []).slice(0, 3).map((s: string, i: number) => <span key={i} style={{ fontSize: '0.6rem', padding: '1px 6px', borderRadius: '6px', background: 'var(--primary-glow)', color: 'var(--primary-light)' }}>{s}</span>)}</div>}
             </div>
           </div>
           <div className="job-card-v2__right">
             <div className="job-card-v2__salary">{job.currency}{typeof job.salaryMin === 'number' && job.salaryMin > 10000 ? Math.round(job.salaryMin/1000) + 'K' : job.salaryMin}</div>
+            {job.postedAgo && <div className="text-sm text-muted" style={{ fontSize: '0.65rem' }}>{job.postedAgo}</div>}
           </div>
           <div className="job-card-v2__actions">
             <button className="btn-apply" onClick={e => { e.stopPropagation(); onJobClick(job) }}>Apply Now</button>

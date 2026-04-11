@@ -3,7 +3,7 @@ import './index.css'
 import { APP, CATEGORIES, GIG_CATEGORIES, SKILLS, WALLET } from './config'
 import {
   loginWithEmail, signupWithEmail, loginWithGoogle, logout, onAuthChange,
-  getJobs, applyToJob, saveJob, unsaveJob, getSavedJobs,
+  getJobs, postGig, applyToJob, saveJob, unsaveJob, getSavedJobs,
   dailyCheckin, listenToUserProfile, addNotification,
   type User
 } from './lib/firebase'
@@ -273,12 +273,20 @@ function JobsFeedPage({ jobs, savedJobIds, onJobClick, onSaveJob }: { jobs: any[
 
 // ═══ JOB DETAILS ═══
 function JobDetailsPage({ job, onBack, onApply }: { job: any, onBack: () => void, onApply: () => void }) {
-  const fmtSalary = () => job.unit === 'LPA' || job.unit === 'K' ? `${job.currency}${job.salaryMin}-${job.salaryMax}${job.unit}` : `${job.currency}${job.salaryMin.toLocaleString()}-${job.salaryMax.toLocaleString()} ${job.unit}`
+  const fmtSalary = () => {
+    try {
+      const min = typeof job.salaryMin === 'number' ? job.salaryMin : 0
+      const max = typeof job.salaryMax === 'number' ? job.salaryMax : 0
+      if (min > 100000) return `${job.currency || '₹'}${Math.round(min/1000)}K-${Math.round(max/1000)}K`
+      if (min > 10000) return `${job.currency || '₹'}${min.toLocaleString()}-${max.toLocaleString()}`
+      return `${job.currency || '$'}${min}-${max}${job.unit || ''}`
+    } catch { return 'Competitive' }
+  }
   return (
     <div className="page"><div className="page__content slide-up">
       <button onClick={onBack} className="btn-back">← Back</button>
       <div style={{ textAlign: 'center', padding: '20px 0' }}>
-        <div className="detail-logo">{job.logo}</div>
+        <div className="detail-logo">{job.logo || '💼'}</div>
         <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '12px' }}>{job.title}</h2>
         <p className="text-muted text-sm mt-1">{job.company}</p>
         {job.verified && <span className="verified-badge mt-1">✓ Verified</span>}
@@ -290,15 +298,15 @@ function JobDetailsPage({ job, onBack, onApply }: { job: any, onBack: () => void
       </div>
       <div className="detail-section">
         <h3>Skills Required</h3>
-        <div className="skill-selector">{job.skills.map((s: string, i: number) => <span key={i} className="skill-chip">{s}</span>)}</div>
+        <div className="skill-selector">{(job.skills || []).map((s: string, i: number) => <span key={i} className="skill-chip">{s}</span>)}</div>
       </div>
       <div className="detail-section">
         <h3>Description</h3>
         <div className="detail-desc">
-          <p>We're looking for a talented {job.title} to join {job.company}.</p>
-          <p>• Build and maintain high-quality applications</p>
+          <p>{job.description || `We're looking for a talented ${job.title} to join ${job.company}.`}</p>
+          {!job.description && <><p>• Build and maintain high-quality applications</p>
           <p>• Collaborate with cross-functional teams</p>
-          <p>• Proficiency in {job.skills.join(', ')}</p>
+          <p>• Proficiency in {(job.skills || []).join(', ')}</p></>}
         </div>
       </div>
       <div className="detail-sticky">
@@ -313,6 +321,10 @@ function MarketplacePage({ userName: _userName }: { userName: string }) {
   const [view, setView] = useState<'gigs' | 'talent'>('gigs')
   const [showPost, setShowPost] = useState(false)
   const [searchSkill, setSearchSkill] = useState('')
+  const [gigTitle, setGigTitle] = useState('')
+  const [gigCategory, setGigCategory] = useState('')
+  const [gigPrice, setGigPrice] = useState('')
+  const [gigPosting, setGigPosting] = useState(false)
   const filteredTalent = searchSkill ? DEMO_TALENTS.filter(t => t.skills.some(s => s.toLowerCase().includes(searchSkill.toLowerCase())) || t.title.toLowerCase().includes(searchSkill.toLowerCase())) : DEMO_TALENTS
 
   return (
@@ -372,11 +384,18 @@ function MarketplacePage({ userName: _userName }: { userName: string }) {
 
       {showPost && <div className="modal-overlay" onClick={() => setShowPost(false)}><div className="modal-sheet" onClick={e => e.stopPropagation()}>
         <div className="modal-sheet__handle" /><h2>➕ Post Your Gig</h2>
-        <div className="form-group"><label>Gig Title</label><input className="form-input" placeholder="I will edit your YouTube video..." /></div>
-        <div className="form-group"><label>Category</label><select className="form-input"><option value="">Select</option>{GIG_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}</select></div>
-        <div className="form-group"><label>Price ({WALLET.currency})</label><input className="form-input" type="number" placeholder="500" /></div>
+        <div className="form-group"><label>Gig Title</label><input className="form-input" placeholder="I will edit your YouTube video..." value={gigTitle} onChange={e => setGigTitle(e.target.value)} /></div>
+        <div className="form-group"><label>Category</label><select className="form-input" value={gigCategory} onChange={e => setGigCategory(e.target.value)}><option value="">Select</option>{GIG_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}</select></div>
+        <div className="form-group"><label>Price ({WALLET.currency})</label><input className="form-input" type="number" placeholder="500" value={gigPrice} onChange={e => setGigPrice(e.target.value)} /></div>
         <div className="form-group"><label>Skills (Max 5)</label><div className="skill-selector mt-1">{SKILLS.slice(0, 15).map(s => <button key={s} className="skill-tag">{s}</button>)}</div></div>
-        <button className="btn btn--primary mt-2" onClick={() => setShowPost(false)}>🚀 Post Gig</button>
+        <button className="btn btn--primary mt-2" disabled={gigPosting || !gigTitle} onClick={async () => {
+          setGigPosting(true)
+          try {
+            await postGig({ title: gigTitle, category: gigCategory, price: Number(gigPrice) || 0, seller: _userName || 'User', icon: '🎯', color: '#6C5CE7' })
+            setShowPost(false); setGigTitle(''); setGigCategory(''); setGigPrice('')
+          } catch { }
+          setGigPosting(false)
+        }}>{gigPosting ? '⏳ Posting...' : '🚀 Post Gig'}</button>
         <button className="btn btn--ghost mt-1" onClick={() => setShowPost(false)}>Cancel</button>
       </div></div>}
     </div></div>
@@ -441,6 +460,31 @@ function WalletPage({ userProfile, onCheckin }: { userProfile: any, onCheckin: (
           <div className={`wallet-txn__amount ${tx.credit ? 'wallet-txn__amount--credit' : 'wallet-txn__amount--debit'}`}>{tx.amount}</div>
         </div>
       ))}
+
+      {/* ─── HOW TO EARN ─── */}
+      <div className="section-divider" />
+      <div className="section-header"><h2>💡 How to Earn</h2></div>
+      <p className="text-sm text-muted" style={{ marginBottom: '12px' }}>Earn Hirezzy Coins (HZC) and real cash through these activities:</p>
+      {[
+        { icon: '📱', task: 'Daily Check-in', reward: '+5 HZC', desc: 'Open app every day' },
+        { icon: '🎁', task: 'Refer Friends', reward: '+25 HZC', desc: 'Share your invite link' },
+        { icon: '📝', task: 'Apply to Jobs', reward: '+2 HZC', desc: 'Per job application' },
+        { icon: '🎯', task: 'Complete Gigs', reward: '₹ Real Cash', desc: 'Freelance & earn' },
+        { icon: '⭐', task: 'Get Verified', reward: '+50 HZC', desc: 'One-time bonus' },
+        { icon: '🏆', task: 'Leaderboard Top 10', reward: '+100 HZC', desc: 'Weekly reward' },
+      ].map((item, i) => (
+        <div key={i} className="wallet-txn fade-in" style={{ animationDelay: `${i * 0.04}s`, borderLeft: '3px solid var(--primary)' }}>
+          <div className="wallet-txn__icon" style={{ background: 'rgba(108,92,231,0.1)' }}>{item.icon}</div>
+          <div className="wallet-txn__info"><div style={{ fontWeight: 600 }}>{item.task}</div><div>{item.desc}</div></div>
+          <div style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>{item.reward}</div>
+        </div>
+      ))}
+
+      <div className="section-divider" />
+      <div style={{ background: 'var(--bg-card)', border: 'var(--card-border)', borderRadius: 'var(--radius)', padding: '16px', textAlign: 'center' }}>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>💰 <strong>1000 HZC = ₹100</strong> — Withdraw anytime!</p>
+        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Minimum withdrawal: 500 HZC</p>
+      </div>
     </div></div>
   )
 }

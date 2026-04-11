@@ -366,8 +366,7 @@ export async function sendOffer(fromUserId: string, toUserId: string, offerData:
   await addNotification(toUserId, {
     type: 'offer',
     title: '🎉 New Job Offer!',
-    message: `You received an offer: ${offerData.title}`,
-    fromUserId,
+    body: `You received an offer: ${offerData.title}`,
   })
   return docRef.id
 }

@@ -114,45 +114,51 @@ function AuthPage({ onLogin }: { onLogin: (user: User) => void }) {
 }
 
 // ═══ HOME PAGE — Matching Mockup ═══
-function HomePage({ userName, jobs, savedJobIds, onJobClick, onTabChange, onSaveJob, userProfile }: { userName: string, jobs: any[], savedJobIds: string[], onJobClick: (job: any) => void, onTabChange: (tab: string) => void, onSaveJob: (id: string) => void, userProfile: any }) {
+function HomePage({ userName: _un, jobs, savedJobIds, onJobClick, onTabChange, onSaveJob, userProfile }: { userName: string, jobs: any[], savedJobIds: string[], onJobClick: (job: any) => void, onTabChange: (tab: string) => void, onSaveJob: (id: string) => void, userProfile: any }) {
   return (
     <div className="page"><div className="page__content">
 
-      {/* ─── Wallet Card (Top) ─── */}
+      {/* ─── HERO SECTION ─── */}
+      <div className="hero fade-in">
+        <div className="hero__tag">🚀 All-in-One Career Platform</div>
+        <h1 className="hero__title"><span>Earn. Work. Grow.</span></h1>
+        <p className="hero__sub">Jobs + Freelance + Hiring + Earning<br/>Everything in one powerful app</p>
+        <button className="hero__cta" onClick={() => onTabChange('jobs')}>🔍 Explore Jobs</button>
+      </div>
+
+      {/* ─── TRUST STATS ─── */}
+      <div className="trust-stats fade-in">
+        <div className="trust-stat"><div className="trust-stat__num">10K+</div><div className="trust-stat__label">Jobs</div></div>
+        <div className="trust-stat"><div className="trust-stat__num">5K+</div><div className="trust-stat__label">Talent</div></div>
+        <div className="trust-stat"><div className="trust-stat__num">2K+</div><div className="trust-stat__label">Gigs</div></div>
+        <div className="trust-stat"><div className="trust-stat__num">₹50L+</div><div className="trust-stat__label">Earned</div></div>
+      </div>
+
+      {/* ─── FEATURE SHOWCASE ─── */}
+      <div className="features fade-in">
+        <div className="feature-card" onClick={() => onTabChange('jobs')}><div className="feature-card__icon">💼</div><div className="feature-card__title">Job Search</div><div className="feature-card__desc">Latest & Govt Jobs</div></div>
+        <div className="feature-card" onClick={() => onTabChange('gigs')}><div className="feature-card__icon">🎯</div><div className="feature-card__title">Talent Search</div><div className="feature-card__desc">Find & Hire Experts</div></div>
+        <div className="feature-card" onClick={() => onTabChange('gigs')}><div className="feature-card__icon">🛒</div><div className="feature-card__title">Gig Marketplace</div><div className="feature-card__desc">Buy & Sell Services</div></div>
+        <div className="feature-card" onClick={() => onTabChange('wallet')}><div className="feature-card__icon">💰</div><div className="feature-card__title">Wallet & Earn</div><div className="feature-card__desc">Coins & Rewards</div></div>
+      </div>
+
+      <div className="section-divider" />
+
+      {/* ─── Quick Wallet Card ─── */}
       <div className="home-wallet fade-in" onClick={() => onTabChange('wallet')}>
         <div className="home-wallet__left">
           <div className="home-wallet__label">Earnings:</div>
           <div className="home-wallet__amount">{WALLET.currency}{(userProfile?.walletBalance || 0).toLocaleString()}.00</div>
           <div className="home-wallet__coins">Hirezzy Coins: <strong>{userProfile?.coins || 0}</strong></div>
         </div>
-        <div className="home-wallet__badge">✅ Verified</div>
+        <div className="home-wallet__badge">{userProfile?.verified ? '✅ Verified' : '⏳ Verify'}</div>
         <div className="home-wallet__actions">
           <button className="home-wallet__btn">Withdraw</button>
-          <button className="home-wallet__btn home-wallet__btn--outline">Transaction History</button>
+          <button className="home-wallet__btn home-wallet__btn--outline" onClick={e => { e.stopPropagation(); onTabChange('wallet') }}>History</button>
         </div>
       </div>
 
-      {/* ─── Your Profile Card ─── */}
-      <div className="home-profile-card fade-in" onClick={() => onTabChange('profile')}>
-        <div className="home-profile-card__header">
-          <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Your Profile</span>
-        </div>
-        <div className="home-profile-card__body">
-          <div className="home-profile-card__avatar">{userName.charAt(0).toUpperCase()}<div className="talent-card__status talent-card__status--available" /></div>
-          <div className="home-profile-card__info">
-            <div style={{ fontSize: '0.8rem' }}>Availability: <span style={{ color: 'var(--accent)' }}>Available</span></div>
-            <div className="home-profile-card__skills">
-              <span className="skill-chip">UI/UX Design</span>
-              <span className="skill-chip">React</span>
-              <span className="skill-chip">Web3</span>
-            </div>
-          </div>
-        </div>
-        <div className="home-profile-card__footer">
-          <div className="home-profile-card__portfolio">Portfolio: <strong>3 items</strong></div>
-          <div className="home-profile-card__rate">Rate Card: <strong style={{ color: 'var(--secondary)', fontSize: '1.1rem' }}>$80/hr</strong></div>
-        </div>
-      </div>
+      <div className="section-divider" />
 
       {/* ─── Job Feed & Gig Marketplace Toggle ─── */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>

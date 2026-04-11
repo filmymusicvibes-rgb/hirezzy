@@ -169,6 +169,43 @@ export async function postGig(gigData: any) {
   return docRef.id
 }
 
+export async function getGigs() {
+  const q = query(collection(db, 'gigs'), orderBy('createdAt', 'desc'), limit(30))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+// ═══ GIG ORDERS ═══
+
+export async function placeGigOrder(gigId: string, buyerId: string, sellerId: string, gigTitle: string, price: number) {
+  const docRef = await addDoc(collection(db, 'gig_orders'), {
+    gigId, buyerId, sellerId, gigTitle, price,
+    status: 'ordered', // ordered → in_progress → delivered → completed
+    createdAt: serverTimestamp(),
+  })
+  await addNotification(sellerId, {
+    type: 'order', title: '🎉 New Order!',
+    body: `New order for "${gigTitle}" — $${price}`,
+  })
+  return docRef.id
+}
+
+export async function getMyOrders(userId: string) {
+  const q = query(collection(db, 'gig_orders'), where('buyerId', '==', userId), orderBy('createdAt', 'desc'))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+export async function getMyGigOrders(userId: string) {
+  const q = query(collection(db, 'gig_orders'), where('sellerId', '==', userId), orderBy('createdAt', 'desc'))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+export async function updateOrderStatus(orderId: string, status: string) {
+  await updateDoc(doc(db, 'gig_orders', orderId), { status })
+}
+
 // ═══ APPLICATIONS ═══
 
 export async function applyToJob(jobId: string, userId: string, resumeUrl: string, coverLetter: string, recruiterId: string) {

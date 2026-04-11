@@ -4,7 +4,7 @@ import { APP, CATEGORIES, GIG_CATEGORIES, SKILLS, WALLET } from './config'
 import {
   loginWithEmail, signupWithEmail, loginWithGoogle, logout, onAuthChange,
   getJobs, postGig, applyToJob, saveJob, unsaveJob, getSavedJobs, getMyApplications, searchTalent,
-  dailyCheckin, listenToUserProfile, addNotification, updateUserProfile, uploadResume, sendOffer,
+  dailyCheckin, listenToUserProfile, addNotification, updateUserProfile, uploadResume, sendOffer, placeGigOrder, getMyOrders,
   auth, type User
 } from './lib/firebase'
 import { seedJobs } from './lib/seedJobs'
@@ -460,7 +460,14 @@ function MarketplacePage({ userName: _userName }: { userName: string }) {
         </div>
       </div>
       <div className="detail-sticky">
-        <button className="btn btn--primary" style={{ fontSize: '1rem', padding: '16px' }}>🛒 Order Now — ${selectedGig.price}</button>
+        <button className="btn btn--primary" style={{ fontSize: '1rem', padding: '16px' }} onClick={async () => {
+          if (!auth.currentUser) { alert('Please login first!'); return }
+          try {
+            await placeGigOrder(selectedGig.id, auth.currentUser.uid, selectedGig.sellerId || 'seller', selectedGig.title, selectedGig.price)
+            alert('✅ Order placed successfully! Seller will be notified.')
+            setSelectedGig(null)
+          } catch { alert('❌ Failed to place order. Try again.') }
+        }}>🛒 Order Now — ${selectedGig.price}</button>
       </div>
     </div></div>
   )
@@ -806,6 +813,7 @@ function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userPr
           { icon: '❤️', title: 'Saved Jobs', nav: 'saved' },
           { icon: '💰', title: 'Wallet & Earnings', nav: 'wallet' },
           { icon: '🎯', title: 'My Gigs', nav: 'gigs' },
+          { icon: '📦', title: 'My Orders', nav: 'orders' },
           { icon: '🏆', title: 'Leaderboard', nav: 'leaderboard' },
           { icon: '⚙️', title: 'Settings' }, { icon: '💬', title: 'Help & Support' },
         ].map((item: any, i) => (
@@ -1082,6 +1090,56 @@ function TalentPage() {
   )
 }
 
+// ═══ MY ORDERS ═══
+function MyOrdersPage({ onBack }: { onBack: () => void }) {
+  const [orders, setOrders] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    if (!auth.currentUser) return
+    getMyOrders(auth.currentUser.uid).then(data => { setOrders(data); setLoading(false) }).catch(() => setLoading(false))
+  }, [])
+
+  const statusMap: any = {
+    ordered: { bg: '#3B82F620', color: '#3B82F6', label: '📦 Ordered' },
+    in_progress: { bg: '#F59E0B20', color: '#F59E0B', label: '⚙️ In Progress' },
+    delivered: { bg: '#8B5CF620', color: '#8B5CF6', label: '📬 Delivered' },
+    completed: { bg: '#10B98120', color: '#10B981', label: '✅ Completed' },
+  }
+
+  return (
+    <div className="page"><div className="page__content slide-up">
+      <button onClick={onBack} className="btn-back">← Back</button>
+      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>📦 My Orders</h2>
+      {loading && <p className="text-center text-muted">Loading...</p>}
+      {!loading && orders.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🛒</div>
+          <p style={{ fontWeight: 600 }}>No orders yet</p>
+          <p className="text-sm text-muted">Order a gig to get started!</p>
+        </div>
+      )}
+      {orders.map((o: any) => {
+        const st = statusMap[o.status] || statusMap.ordered
+        return (
+          <div key={o.id} className="job-card-v2 fade-in">
+            <div className="job-card-v2__left">
+              <div className="job-card-v2__icon">🎯</div>
+              <div className="job-card-v2__info">
+                <div className="job-card-v2__title">{o.gigTitle}</div>
+                <div className="job-card-v2__company">💰 ${o.price}</div>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ background: st.bg, color: st.color, padding: '4px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 600 }}>{st.label}</span>
+              <div className="text-sm text-muted" style={{ marginTop: '4px' }}>{o.createdAt?.toDate ? new Date(o.createdAt.toDate()).toLocaleDateString() : 'Recently'}</div>
+            </div>
+          </div>
+        )
+      })}
+    </div></div>
+  )
+}
+
 // ═══ BOTTOM NAV ═══
 function BottomNav({ active, onChange }: { active: string, onChange: (tab: string) => void }) {
   const tabs = [
@@ -1248,6 +1306,7 @@ export default function App() {
       {activeTab === 'applications' && <MyApplicationsPage onBack={() => setActiveTab('profile')} jobs={activeJobs} />}
       {activeTab === 'saved' && <SavedJobsPage onBack={() => setActiveTab('profile')} jobs={activeJobs} savedJobIds={savedJobIds} onJobClick={setSelectedJob} onSaveJob={handleSaveJob} />}
       {activeTab === 'notifications' && <NotificationsPage onBack={() => setActiveTab('home')} />}
+      {activeTab === 'orders' && <MyOrdersPage onBack={() => setActiveTab('profile')} />}
       {activeTab === 'profile' && <ProfilePage userName={userName} userEmail={userEmail} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} userProfile={userProfile} onTabChange={setActiveTab} />}
       <BottomNav active={activeTab} onChange={setActiveTab} />
       {toast && <div className={`toast toast--${toast.type}`}>{toast.msg}</div>}

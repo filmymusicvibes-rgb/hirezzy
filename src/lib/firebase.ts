@@ -352,6 +352,25 @@ export async function searchJobs(searchTerm: string) {
   )
 }
 
+// ═══ OFFERS ═══
+
+export async function sendOffer(fromUserId: string, toUserId: string, offerData: any) {
+  const docRef = await addDoc(collection(db, 'offers'), {
+    fromUserId,
+    toUserId,
+    ...offerData,
+    status: 'pending', // pending | accepted | rejected
+    createdAt: serverTimestamp(),
+  })
+  // Also notify the talent
+  await addNotification(toUserId, {
+    type: 'offer',
+    title: '🎉 New Job Offer!',
+    message: `You received an offer: ${offerData.title}`,
+    fromUserId,
+  })
+  return docRef.id
+}
+
 // Re-export types
 export type { User }
-

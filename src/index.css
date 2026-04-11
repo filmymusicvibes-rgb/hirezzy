@@ -2115,3 +2115,25 @@ textarea.form-input { font-family: var(--font-body); line-height: 1.6; }
   border-color: var(--primary) !important;
   color: var(--primary) !important;
 }
+
+/* ─── Modal ─── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-content {
+  background: var(--card-bg); border-radius: 20px;
+  padding: 24px; width: 100%; border: 1px solid var(--border);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal-content h3 { font-size: 1.1rem; font-weight: 700; }
+
+/* ─── Back Button ─── */
+.btn-back {
+  background: none; border: none; color: var(--text-primary);
+  font-size: 0.9rem; font-weight: 600; padding: 8px 0;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+}
+.btn-back:hover { color: var(--primary); }

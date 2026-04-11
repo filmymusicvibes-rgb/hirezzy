@@ -161,9 +161,26 @@ function HomePage({ userName: _un, jobs, savedJobIds, onJobClick, onTabChange, o
         </div>
       </div>
 
+      {/* ─── Quick Actions ─── */}
+      <div className="fade-in" style={{ marginBottom: '16px' }}>
+        <div className="section-header"><h2>⚡ Quick Actions</h2></div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
+          {[
+            { icon: '📋', label: 'Apply', tab: 'jobs' },
+            { icon: '🎯', label: 'Post Gig', tab: 'gigs' },
+            { icon: '👥', label: 'Talent', tab: 'talent' },
+            { icon: '🎁', label: 'Refer', tab: 'referral' },
+          ].map((a, i) => (
+            <div key={i} onClick={() => onTabChange(a.tab)} style={{ background: 'var(--card-bg)', borderRadius: '14px', padding: '14px 8px', textAlign: 'center', border: '1px solid var(--border)', cursor: 'pointer', transition: 'transform 0.2s' }}>
+              <div style={{ fontSize: '1.3rem', marginBottom: '4px' }}>{a.icon}</div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 600 }}>{a.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="section-divider" />
 
-      {/* ─── Job Feed & Gig Marketplace Toggle ─── */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
         <button className="section-tab section-tab--active" onClick={() => onTabChange('jobs')}>💼 Job Feed</button>
         <button className="section-tab" onClick={() => onTabChange('gigs')}>🎯 Gig Marketplace</button>
@@ -693,6 +710,32 @@ function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userPr
             : <input className="form-input" value={editName} onChange={e => setEditName(e.target.value)} placeholder="Your name" style={{ marginBottom: '4px', padding: '8px 12px' }} />}
             <div className="verified-badge mt-1">{displayAvail === 'available' ? '🟢 Available' : displayAvail === 'busy' ? '🟡 Busy' : '🔴 Offline'}</div>
           </div>
+        </div>
+
+        {/* ─── Profile Completion ─── */}
+        {(() => {
+          const fields = [userProfile?.name, userProfile?.city, userProfile?.bio, (userProfile?.skills || []).length > 0, userProfile?.rate, userProfile?.experience, userProfile?.resumeUrl]
+          const filled = fields.filter(Boolean).length
+          const pct = Math.round((filled / fields.length) * 100)
+          const color = pct >= 80 ? '#10B981' : pct >= 50 ? '#F59E0B' : '#EF4444'
+          return (
+            <div style={{ marginTop: '12px', padding: '12px 16px', background: 'var(--card-bg)', borderRadius: '14px', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Profile Completion</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color }}>{pct}%</span>
+              </div>
+              <div style={{ height: '6px', borderRadius: '3px', background: 'var(--border)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${pct}%`, borderRadius: '3px', background: `linear-gradient(90deg, ${color}, ${color}CC)`, transition: 'width 0.5s ease' }} />
+              </div>
+              {pct < 100 && <p className="text-sm text-muted" style={{ marginTop: '6px' }}>Complete your profile to get more visibility!</p>}
+            </div>
+          )
+        })()}
+
+        {/* Share + Member Since */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+          <span className="text-sm text-muted">📅 Member since {userProfile?.createdAt?.toDate ? new Date(userProfile.createdAt.toDate()).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : 'Recently'}</span>
+          <button onClick={() => { navigator.clipboard.writeText(`https://hirezzy.vercel.app/talent/${auth.currentUser?.uid || ''}`); alert('✅ Profile link copied!') }} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '8px', padding: '4px 10px', fontSize: '0.72rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>🔗 Share Profile</button>
         </div>
 
         {/* ─── City & Bio ─── */}

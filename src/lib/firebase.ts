@@ -308,6 +308,24 @@ export async function getSavedJobs(userId: string) {
   const snap = await getDocs(q)
   return snap.docs.map(d => d.data().jobId)
 }
+// ═══ SHORTLIST TALENT ═══
+
+export async function shortlistTalent(userId: string, talentId: string) {
+  await setDoc(doc(db, 'shortlists', `${userId}_${talentId}`), {
+    userId, talentId, savedAt: serverTimestamp(),
+  })
+}
+
+export async function unshortlistTalent(userId: string, talentId: string) {
+  const { deleteDoc } = await import('firebase/firestore')
+  await deleteDoc(doc(db, 'shortlists', `${userId}_${talentId}`))
+}
+
+export async function getShortlistedTalent(userId: string) {
+  const q = query(collection(db, 'shortlists'), where('userId', '==', userId))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => d.data().talentId)
+}
 
 // ═══ NOTIFICATIONS ═══
 

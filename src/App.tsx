@@ -5,6 +5,7 @@ import {
   loginWithEmail, signupWithEmail, loginWithGoogle, logout, onAuthChange,
   getJobs, postGig, applyToJob, saveJob, unsaveJob, getSavedJobs, getMyApplications, searchTalent,
   dailyCheckin, listenToUserProfile, addNotification, updateUserProfile, uploadResume, sendOffer, placeGigOrder, getMyOrders,
+  shortlistTalent, unshortlistTalent, getShortlistedTalent,
   auth, type User
 } from './lib/firebase'
 import { seedJobs } from './lib/seedJobs'
@@ -987,11 +988,24 @@ function TalentPage() {
   const [offerDesc, setOfferDesc] = useState('')
   const [offerBudget, setOfferBudget] = useState('')
   const [sending, setSending] = useState(false)
+  const [shortlistedIds, setShortlistedIds] = useState<string[]>([])
   const COLORS = ['#6C5CE7', '#00D2FF', '#E17055', '#00E676', '#A29BFE', '#FD79A8', '#FDCB6E', '#636E72']
 
   useEffect(() => {
     searchTalent().then(data => { setRealTalent(data); setLoading(false) }).catch(() => setLoading(false))
+    if (auth.currentUser) getShortlistedTalent(auth.currentUser.uid).then(setShortlistedIds).catch(() => {})
   }, [])
+
+  const toggleShortlist = async (talentId: string) => {
+    if (!auth.currentUser) return
+    if (shortlistedIds.includes(talentId)) {
+      await unshortlistTalent(auth.currentUser.uid, talentId)
+      setShortlistedIds(prev => prev.filter(id => id !== talentId))
+    } else {
+      await shortlistTalent(auth.currentUser.uid, talentId)
+      setShortlistedIds(prev => [...prev, talentId])
+    }
+  }
 
   const firestoreTalent = realTalent.map((u: any, i: number) => ({
     id: u.id, name: u.name || 'User', title: u.bio || 'Professional',
@@ -1063,7 +1077,10 @@ function TalentPage() {
               <div className="talent-card__skills">{(t.skills || []).map((s: string, i: number) => <span key={i} className="talent-card__skill">{s}</span>)}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
                 <div className="talent-card__rate">{t.rate}</div>
-                <button className="btn-hire" style={{ padding: '4px 14px', fontSize: '0.72rem' }} onClick={() => setOfferTarget(t)}>💼 Hire</button>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button className={`btn-save ${shortlistedIds.includes(t.id) ? 'btn-save--active' : ''}`} style={{ padding: '4px 10px', fontSize: '0.7rem' }} onClick={() => toggleShortlist(t.id)}>{shortlistedIds.includes(t.id) ? '⭐ Saved' : '☆ Save'}</button>
+                  <button className="btn-hire" style={{ padding: '4px 14px', fontSize: '0.72rem' }} onClick={() => setOfferTarget(t)}>💼 Hire</button>
+                </div>
               </div>
               <div className="talent-card__rating">⭐ {t.ratingNum} ({t.reviews} reviews)</div>
             </div>

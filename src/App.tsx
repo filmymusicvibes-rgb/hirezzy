@@ -4,8 +4,8 @@ import { APP, CATEGORIES, GIG_CATEGORIES, SKILLS, WALLET } from './config'
 import {
   loginWithEmail, signupWithEmail, loginWithGoogle, logout, onAuthChange,
   getJobs, postGig, applyToJob, saveJob, unsaveJob, getSavedJobs,
-  dailyCheckin, listenToUserProfile, addNotification,
-  type User
+  dailyCheckin, listenToUserProfile, addNotification, updateUserProfile,
+  auth, type User
 } from './lib/firebase'
 import { seedJobs } from './lib/seedJobs'
 
@@ -569,65 +569,122 @@ function WalletPage({ userProfile, onCheckin }: { userProfile: any, onCheckin: (
   )
 }
 
-// ═══ PROFILE — Skill Profile ═══
-function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userProfile: _up, onTabChange }: { userName: string, userEmail: string, onLogout: () => void, theme: string, toggleTheme: () => void, userProfile: any, onTabChange: (tab: string) => void }) {
-  const mySkills = ['React Native', 'Node.js', 'Solidity', 'Python', 'AI/ML']
-  const portfolioItems = ['🎮 DeFi Platform', '🏙️ Smart City App', '⚡ Smart Platform', '🎨 Design System']
+// ═══ PROFILE — Real Editable Skill Profile ═══
+function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userProfile, onTabChange }: { userName: string, userEmail: string, onLogout: () => void, theme: string, toggleTheme: () => void, userProfile: any, onTabChange: (tab: string) => void }) {
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [editName, setEditName] = useState(userProfile?.name || userName)
+  const [editCity, setEditCity] = useState(userProfile?.city || '')
+  const [editBio, setEditBio] = useState(userProfile?.bio || '')
+  const [editPhone, setEditPhone] = useState(userProfile?.phone || '')
+  const [editRate, setEditRate] = useState(userProfile?.rate || '')
+  const [editSkills, setEditSkills] = useState<string[]>(userProfile?.skills || [])
+  const [editAvailability, setEditAvailability] = useState(userProfile?.availability || 'available')
+
+  const toggleSkill = (s: string) => {
+    setEditSkills(prev => prev.includes(s) ? prev.filter(x => x !== s) : prev.length < 10 ? [...prev, s] : prev)
+  }
+
+  const handleSave = async () => {
+    if (!auth.currentUser) return
+    setSaving(true)
+    try {
+      await updateUserProfile(auth.currentUser.uid, {
+        name: editName, city: editCity, bio: editBio, phone: editPhone,
+        rate: editRate, skills: editSkills, availability: editAvailability
+      })
+      setEditing(false)
+    } catch { }
+    setSaving(false)
+  }
+
+  const displaySkills = editing ? editSkills : (userProfile?.skills || [])
+  const displayName = editing ? editName : (userProfile?.name || userName)
+  const displayCity = userProfile?.city || 'Add your city'
+  const displayBio = userProfile?.bio || 'Tell recruiters about yourself...'
+  const displayRate = userProfile?.rate || 'Set your rate'
+  const displayAvail = userProfile?.availability || 'available'
+
   return (
     <div className="page"><div className="page__content">
       {/* Skill Profile Header */}
       <div className="skill-profile slide-up">
         <div className="skill-profile__top">
-          <h2>Skill Profile ✅</h2>
-          <button className="text-sm" style={{ color: 'var(--secondary)' }}>✏️ Edit</button>
+          <h2>Skill Profile {userProfile?.verified ? '✅' : ''}</h2>
+          {!editing ? <button className="text-sm" style={{ color: 'var(--secondary)' }} onClick={() => setEditing(true)}>✏️ Edit</button>
+          : <button className="text-sm" style={{ color: 'var(--accent)' }} onClick={handleSave} disabled={saving}>{saving ? '⏳' : '✅'} Save</button>}
         </div>
         <div className="skill-profile__user">
-          <div className="skill-profile__avatar">{userName.charAt(0).toUpperCase()}<div className="talent-card__status talent-card__status--available" /></div>
-          <div><div className="skill-profile__name">{userName}</div><div className="text-sm text-muted">{userEmail}</div><div className="verified-badge mt-1">🟢 Available</div></div>
+          <div className="skill-profile__avatar">{displayName.charAt(0).toUpperCase()}<div className={`talent-card__status talent-card__status--${displayAvail}`} /></div>
+          <div>
+            {!editing ? <><div className="skill-profile__name">{displayName}</div><div className="text-sm text-muted">{userEmail}</div></>
+            : <input className="form-input" value={editName} onChange={e => setEditName(e.target.value)} placeholder="Your name" style={{ marginBottom: '4px', padding: '8px 12px' }} />}
+            <div className="verified-badge mt-1">{displayAvail === 'available' ? '🟢 Available' : displayAvail === 'busy' ? '🟡 Busy' : '🔴 Offline'}</div>
+          </div>
         </div>
 
-        {/* Editable Skills */}
+        {/* ─── City & Bio ─── */}
+        {editing ? (
+          <div style={{ marginTop: '12px' }}>
+            <div className="form-group"><label>📍 City</label><input className="form-input" value={editCity} onChange={e => setEditCity(e.target.value)} placeholder="Mumbai, Delhi, Hyderabad..." /></div>
+            <div className="form-group"><label>📝 Bio</label><textarea className="form-input" rows={3} value={editBio} onChange={e => setEditBio(e.target.value)} placeholder="I'm a passionate developer..." style={{ resize: 'vertical' }} /></div>
+            <div className="form-group"><label>📞 Phone</label><input className="form-input" value={editPhone} onChange={e => setEditPhone(e.target.value)} placeholder="+91 9876543210" /></div>
+          </div>
+        ) : (
+          <div style={{ marginTop: '8px' }}>
+            <div className="text-sm"><span className="text-muted">📍</span> {displayCity}</div>
+            <div className="text-sm text-muted" style={{ marginTop: '4px' }}>{displayBio}</div>
+          </div>
+        )}
+
+        {/* ─── Skills ─── */}
         <div className="skill-profile__section">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h3>Editable Skills</h3><span className="text-sm" style={{ color: 'var(--text-dim)' }}>Editable</span></div>
-          <div className="skill-selector mt-1">{mySkills.map(s => <span key={s} className="skill-chip skill-chip--editable">{s} ✏️</span>)}</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h3>Skills</h3>{editing && <span className="text-sm text-muted">{editSkills.length}/10</span>}</div>
+          {editing ? (
+            <div className="skill-selector mt-1">{SKILLS.map(s => (
+              <button key={s} className={`skill-tag ${editSkills.includes(s) ? 'skill-tag--selected' : ''}`} onClick={() => toggleSkill(s)}>{editSkills.includes(s) ? '✓ ' : ''}{s}</button>
+            ))}</div>
+          ) : (
+            <div className="skill-selector mt-1">{displaySkills.length > 0 ? displaySkills.map((s: string) => <span key={s} className="skill-chip skill-chip--editable">{s}</span>) : <span className="text-sm text-muted">No skills added yet. Tap Edit to add.</span>}</div>
+          )}
         </div>
 
-        {/* Rate Card */}
+        {/* ─── Rate Card ─── */}
         <div className="skill-profile__section">
           <h3>Rate Card</h3>
-          <div className="rate-card">
-            <div className="rate-card__item"><div className="rate-card__label">Hourly Rate</div><div className="rate-card__value">$75/hr</div></div>
-            <div className="rate-card__item"><div className="rate-card__label">Project Rate</div><div className="rate-card__value">$500/Project</div></div>
-          </div>
+          {editing ? (
+            <div className="form-group"><input className="form-input" value={editRate} onChange={e => setEditRate(e.target.value)} placeholder="$50/hr or ₹2000/project" /></div>
+          ) : (
+            <div className="rate-card">
+              <div className="rate-card__item"><div className="rate-card__label">Your Rate</div><div className="rate-card__value">{displayRate}</div></div>
+            </div>
+          )}
         </div>
 
-        {/* Portfolio */}
+        {/* ─── Availability ─── */}
+        {editing && (
+          <div className="skill-profile__section">
+            <h3>Availability</h3>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+              {['available', 'busy', 'offline'].map(s => (
+                <button key={s} className={`skill-tag ${editAvailability === s ? 'skill-tag--selected' : ''}`} onClick={() => setEditAvailability(s)} style={{ textTransform: 'capitalize' }}>
+                  {s === 'available' ? '🟢' : s === 'busy' ? '🟡' : '🔴'} {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ─── Portfolio ─── */}
         <div className="skill-profile__section">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h3>Portfolio</h3><a href="#" className="text-sm" style={{ color: 'var(--secondary)' }}>See All</a></div>
+          <h3>Portfolio</h3>
           <div className="hz-scroll mt-1">
-            {portfolioItems.map((item, i) => (
+            {(userProfile?.portfolio || ['🎮 DeFi Platform', '🏙️ Smart City App', '⚡ Smart Platform']).map((item: string, i: number) => (
               <div key={i} className="portfolio-item">
-                <div className="portfolio-item__thumb">{item.split(' ')[0]}</div>
-                <div className="portfolio-item__name">{item.split(' ').slice(1).join(' ')}</div>
+                <div className="portfolio-item__thumb">{typeof item === 'string' ? item.split(' ')[0] : '💼'}</div>
+                <div className="portfolio-item__name">{typeof item === 'string' ? item.split(' ').slice(1).join(' ') : item}</div>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Experience */}
-        <div className="skill-profile__section">
-          <h3>Experience Level</h3>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-            <span className="text-sm text-muted">Experience</span>
-            <span className="skill-chip" style={{ background: 'var(--primary-glow)', borderColor: 'var(--primary)' }}>Senior - 7+ Yrs</span>
-          </div>
-        </div>
-
-        {/* Links */}
-        <div className="skill-profile__section">
-          <div className="profile-links">
-            <button className="profile-link"><span>🅱️</span> Behance →</button>
-            <button className="profile-link"><span>🏀</span> Dribbble →</button>
           </div>
         </div>
       </div>
@@ -635,14 +692,16 @@ function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userPr
       {/* Actions */}
       <div className="profile-menu mt-2">
         {[
-          { icon: '📝', title: 'Edit Profile' }, { icon: '📄', title: 'My Resume' },
+          { icon: '📝', title: 'Edit Profile', action: () => setEditing(!editing) },
+          { icon: '📄', title: 'My Resume' },
           { icon: '💰', title: 'Wallet & Earnings', nav: 'wallet' },
           { icon: '🎯', title: 'My Gigs', nav: 'gigs' }, { icon: '❤️', title: 'Saved Jobs' },
           { icon: '🏆', title: 'Leaderboard', nav: 'leaderboard' },
           { icon: '⚙️', title: 'Settings' }, { icon: '💬', title: 'Help & Support' },
-        ].map((item, i) => (
+        ].map((item: any, i) => (
           <div key={i} className="profile-menu__item fade-in" style={{ animationDelay: `${i * 0.04}s` }} onClick={() => { 
             if (item.nav) onTabChange(item.nav)
+            if (item.action) item.action()
             if (item.title === 'Settings') toggleTheme() 
           }}>
             <span>{item.icon}</span><div className="profile-menu__item-text"><div>{item.title}{item.title === 'Settings' ? ` — ${theme === 'dark' ? '🌙 Dark' : '☀️ Light'}` : ''}</div></div><span>›</span>

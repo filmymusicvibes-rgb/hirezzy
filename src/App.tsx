@@ -3,7 +3,7 @@ import './index.css'
 import { APP, CATEGORIES, GIG_CATEGORIES, SKILLS, WALLET } from './config'
 import {
   loginWithEmail, signupWithEmail, loginWithGoogle, logout, onAuthChange,
-  getJobs, postGig, applyToJob, saveJob, unsaveJob, getSavedJobs,
+  getJobs, postGig, applyToJob, saveJob, unsaveJob, getSavedJobs, getMyApplications,
   dailyCheckin, listenToUserProfile, addNotification, updateUserProfile,
   auth, type User
 } from './lib/firebase'
@@ -746,9 +746,11 @@ function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userPr
       <div className="profile-menu mt-2">
         {[
           { icon: '📝', title: 'Edit Profile', action: () => setEditing(!editing) },
+          { icon: '📋', title: 'My Applications', nav: 'applications' },
+          { icon: '❤️', title: 'Saved Jobs', nav: 'saved' },
           { icon: '📄', title: 'My Resume' },
           { icon: '💰', title: 'Wallet & Earnings', nav: 'wallet' },
-          { icon: '🎯', title: 'My Gigs', nav: 'gigs' }, { icon: '❤️', title: 'Saved Jobs' },
+          { icon: '🎯', title: 'My Gigs', nav: 'gigs' },
           { icon: '🏆', title: 'Leaderboard', nav: 'leaderboard' },
           { icon: '⚙️', title: 'Settings' }, { icon: '💬', title: 'Help & Support' },
         ].map((item: any, i) => (
@@ -763,6 +765,122 @@ function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userPr
         <button className="btn btn--ghost mt-2" onClick={onLogout} style={{ color: 'var(--error)' }}>🚪 Logout</button>
       </div>
       <p className="text-center text-sm text-muted mt-3">{APP.name} v{APP.version}</p>
+    </div></div>
+  )
+}
+
+// ═══ MY APPLICATIONS ═══
+function MyApplicationsPage({ onBack, jobs }: { onBack: () => void, jobs: any[] }) {
+  const [apps, setApps] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    if (!auth.currentUser) return
+    getMyApplications(auth.currentUser.uid).then(data => { setApps(data); setLoading(false) }).catch(() => setLoading(false))
+  }, [])
+
+  const getStatusStyle = (s: string) => {
+    const map: any = { applied: { bg: '#3B82F620', color: '#3B82F6', icon: '📤' }, 'in-review': { bg: '#F59E0B20', color: '#F59E0B', icon: '👀' }, shortlisted: { bg: '#10B98120', color: '#10B981', icon: '⭐' }, rejected: { bg: '#EF444420', color: '#EF4444', icon: '❌' } }
+    return map[s] || map.applied
+  }
+
+  return (
+    <div className="page"><div className="page__content slide-up">
+      <button onClick={onBack} className="btn-back">← Back</button>
+      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>📋 My Applications</h2>
+      {loading && <p className="text-center text-muted">Loading...</p>}
+      {!loading && apps.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📭</div>
+          <p style={{ fontWeight: 600 }}>No applications yet</p>
+          <p className="text-sm text-muted">Start applying to jobs!</p>
+        </div>
+      )}
+      {apps.map((app: any) => {
+        const job = jobs.find((j: any) => j.id === app.jobId)
+        const st = getStatusStyle(app.status)
+        return (
+          <div key={app.id} className="job-card-v2 fade-in">
+            <div className="job-card-v2__left">
+              <div className="job-card-v2__icon">{st.icon}</div>
+              <div className="job-card-v2__info">
+                <div className="job-card-v2__title">{job?.title || 'Job Application'}</div>
+                <div className="job-card-v2__company">{job?.company || 'Company'}</div>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ background: st.bg, color: st.color, padding: '4px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 600, textTransform: 'capitalize' }}>{app.status}</span>
+              <div className="text-sm text-muted" style={{ marginTop: '4px' }}>{app.createdAt?.toDate ? new Date(app.createdAt.toDate()).toLocaleDateString() : 'Recently'}</div>
+            </div>
+          </div>
+        )
+      })}
+    </div></div>
+  )
+}
+
+// ═══ SAVED JOBS ═══
+function SavedJobsPage({ onBack, jobs, savedJobIds, onJobClick, onSaveJob }: { onBack: () => void, jobs: any[], savedJobIds: string[], onJobClick: (job: any) => void, onSaveJob: (id: string) => void }) {
+  const savedJobs = jobs.filter((j: any) => savedJobIds.includes(j.id))
+  return (
+    <div className="page"><div className="page__content slide-up">
+      <button onClick={onBack} className="btn-back">← Back</button>
+      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>❤️ Saved Jobs</h2>
+      <p className="text-sm text-muted mb-2">{savedJobs.length} saved jobs</p>
+      {savedJobs.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>💔</div>
+          <p style={{ fontWeight: 600 }}>No saved jobs</p>
+          <p className="text-sm text-muted">Tap ♡ on any job to save it!</p>
+        </div>
+      )}
+      {savedJobs.map((job: any) => (
+        <div key={job.id} className="job-card-v2 fade-in" onClick={() => onJobClick(job)}>
+          <div className="job-card-v2__left">
+            <div className="job-card-v2__icon">{job.logo || '💼'}</div>
+            <div className="job-card-v2__info">
+              <div className="job-card-v2__title">{job.title}</div>
+              <div className="job-card-v2__company">{job.company} <span className="job-card-v2__remote">• {job.remote}</span></div>
+            </div>
+          </div>
+          <div className="job-card-v2__right">
+            <div className="job-card-v2__salary">{job.currency}{typeof job.salaryMin === 'number' && job.salaryMin > 10000 ? Math.round(job.salaryMin/1000) + 'K' : job.salaryMin}</div>
+          </div>
+          <div className="job-card-v2__actions">
+            <button className="btn-apply" onClick={e => { e.stopPropagation(); onJobClick(job) }}>Apply</button>
+            <button className="btn-save btn-save--active" onClick={e => { e.stopPropagation(); onSaveJob(job.id) }}>❤️ Unsave</button>
+          </div>
+        </div>
+      ))}
+    </div></div>
+  )
+}
+
+// ═══ NOTIFICATIONS ═══
+function NotificationsPage({ onBack }: { onBack: () => void }) {
+  const notifications = [
+    { id: 1, icon: '💼', title: 'New jobs matching your skills', desc: '5 new React Developer jobs posted today', time: '2m ago', unread: true },
+    { id: 2, icon: '✅', title: 'Application received', desc: 'Your application for Video Editor was received', time: '1h ago', unread: true },
+    { id: 3, icon: '⭐', title: 'Profile viewed', desc: 'A recruiter viewed your profile', time: '3h ago', unread: false },
+    { id: 4, icon: '🎯', title: 'New gig opportunity', desc: 'Logo Design gig matches your skills', time: '5h ago', unread: false },
+    { id: 5, icon: '🏆', title: 'Achievement unlocked!', desc: 'You completed 7-day check-in streak', time: '1d ago', unread: false },
+    { id: 6, icon: '💰', title: 'Coins earned', desc: '+50 HZC from daily check-in', time: '1d ago', unread: false },
+  ]
+  return (
+    <div className="page"><div className="page__content slide-up">
+      <button onClick={onBack} className="btn-back">← Back</button>
+      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>🔔 Notifications</h2>
+      {notifications.map(n => (
+        <div key={n.id} className="job-card-v2 fade-in" style={{ opacity: n.unread ? 1 : 0.6, borderLeft: n.unread ? '3px solid var(--primary)' : 'none' }}>
+          <div className="job-card-v2__left">
+            <div className="job-card-v2__icon" style={{ fontSize: '1.3rem' }}>{n.icon}</div>
+            <div className="job-card-v2__info">
+              <div className="job-card-v2__title" style={{ fontSize: '0.85rem' }}>{n.title}</div>
+              <div className="job-card-v2__company">{n.desc}</div>
+            </div>
+          </div>
+          <div className="text-sm text-muted" style={{ whiteSpace: 'nowrap' }}>{n.time}</div>
+        </div>
+      ))}
     </div></div>
   )
 }
@@ -988,7 +1106,7 @@ export default function App() {
       <div className="navbar">
         <div className="navbar__logo"><div className="navbar__logo-icon">Hz</div><span>{APP.name}</span></div>
         <div className="navbar__actions">
-          <button className="navbar__btn" style={{ position: 'relative' }}>{Icons.bell}<div className="navbar__notif-dot" /></button>
+          <button className="navbar__btn" style={{ position: 'relative' }} onClick={() => setActiveTab('notifications')}>{Icons.bell}<div className="navbar__notif-dot" /></button>
           <div className="navbar__avatar" onClick={() => setActiveTab('profile')}>{userName.charAt(0).toUpperCase()}</div>
         </div>
       </div>
@@ -998,6 +1116,9 @@ export default function App() {
       {activeTab === 'gigs' && <MarketplacePage userName={userName} />}
       {activeTab === 'wallet' && <WalletPage userProfile={userProfile} onCheckin={handleCheckin} />}
       {activeTab === 'leaderboard' && <LeaderboardPage />}
+      {activeTab === 'applications' && <MyApplicationsPage onBack={() => setActiveTab('profile')} jobs={activeJobs} />}
+      {activeTab === 'saved' && <SavedJobsPage onBack={() => setActiveTab('profile')} jobs={activeJobs} savedJobIds={savedJobIds} onJobClick={setSelectedJob} onSaveJob={handleSaveJob} />}
+      {activeTab === 'notifications' && <NotificationsPage onBack={() => setActiveTab('home')} />}
       {activeTab === 'profile' && <ProfilePage userName={userName} userEmail={userEmail} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} userProfile={userProfile} onTabChange={setActiveTab} />}
       <BottomNav active={activeTab} onChange={setActiveTab} />
       {toast && <div className={`toast toast--${toast.type}`}>{toast.msg}</div>}

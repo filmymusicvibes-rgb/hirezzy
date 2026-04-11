@@ -43,6 +43,8 @@ const DEMO_TALENTS = [
 const Icons = {
   home: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
   search: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
+  jobs: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>,
+  talent: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
   gigs: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>,
   wallet: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>,
   profile: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
@@ -568,7 +570,7 @@ function WalletPage({ userProfile, onCheckin }: { userProfile: any, onCheckin: (
 }
 
 // ═══ PROFILE — Skill Profile ═══
-function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userProfile: _up }: { userName: string, userEmail: string, onLogout: () => void, theme: string, toggleTheme: () => void, userProfile: any }) {
+function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userProfile: _up, onTabChange }: { userName: string, userEmail: string, onLogout: () => void, theme: string, toggleTheme: () => void, userProfile: any, onTabChange: (tab: string) => void }) {
   const mySkills = ['React Native', 'Node.js', 'Solidity', 'Python', 'AI/ML']
   const portfolioItems = ['🎮 DeFi Platform', '🏙️ Smart City App', '⚡ Smart Platform', '🎨 Design System']
   return (
@@ -634,10 +636,15 @@ function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userPr
       <div className="profile-menu mt-2">
         {[
           { icon: '📝', title: 'Edit Profile' }, { icon: '📄', title: 'My Resume' },
-          { icon: '🎯', title: 'My Gigs' }, { icon: '❤️', title: 'Saved Jobs' },
+          { icon: '💰', title: 'Wallet & Earnings', nav: 'wallet' },
+          { icon: '🎯', title: 'My Gigs', nav: 'gigs' }, { icon: '❤️', title: 'Saved Jobs' },
+          { icon: '🏆', title: 'Leaderboard', nav: 'leaderboard' },
           { icon: '⚙️', title: 'Settings' }, { icon: '💬', title: 'Help & Support' },
         ].map((item, i) => (
-          <div key={i} className="profile-menu__item fade-in" style={{ animationDelay: `${i * 0.04}s` }} onClick={() => { if (item.title === 'Settings') toggleTheme() }}>
+          <div key={i} className="profile-menu__item fade-in" style={{ animationDelay: `${i * 0.04}s` }} onClick={() => { 
+            if (item.nav) onTabChange(item.nav)
+            if (item.title === 'Settings') toggleTheme() 
+          }}>
             <span>{item.icon}</span><div className="profile-menu__item-text"><div>{item.title}{item.title === 'Settings' ? ` — ${theme === 'dark' ? '🌙 Dark' : '☀️ Light'}` : ''}</div></div><span>›</span>
           </div>
         ))}
@@ -648,7 +655,7 @@ function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userPr
   )
 }
 
-// ═══ LEADERBOARD ═══
+// ═══ LEADERBOARD (Phase 3) ═══
 function LeaderboardPage() {
   const [tab, setTab] = useState<'freelancers' | 'earners'>('freelancers')
   return (
@@ -677,13 +684,52 @@ function LeaderboardPage() {
   )
 }
 
+// ═══ TALENT PAGE (Standalone) ═══
+function TalentPage() {
+  const [searchSkill, setSearchSkill] = useState('')
+  const filteredTalent = searchSkill ? DEMO_TALENTS.filter(t => t.skills.some(s => s.toLowerCase().includes(searchSkill.toLowerCase())) || t.title.toLowerCase().includes(searchSkill.toLowerCase())) : DEMO_TALENTS
+  return (
+    <div className="page"><div className="page__content">
+      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>👥 Find Talent</h2>
+      <div className="search-bar" style={{ marginTop: 0, marginBottom: '12px' }}><span className="search-bar__icon">{Icons.search}</span><input placeholder="Search by skill, role, name..." value={searchSkill} onChange={e => setSearchSkill(e.target.value)} /></div>
+      <div className="filter-chips"><span className="filter-chip">📍 Location ▾</span><span className="filter-chip">💰 Rate ▾</span><span className="filter-chip">📊 Experience ▾</span><span className="filter-chip">⭐ Rating ▾</span></div>
+
+      <div className="section-header mt-2"><h2>Top Talent</h2><span className="text-sm text-muted">{filteredTalent.length} found</span></div>
+      <div className="hz-scroll mb-2">
+        {filteredTalent.slice(0, 4).map(t => (
+          <div key={t.id} className="talent-card-v2">
+            <div className="talent-card-v2__avatar" style={{ background: `linear-gradient(135deg, ${t.color}, ${t.color}88)` }}>{t.avatar}<div className={`talent-card__status talent-card__status--${t.status}`} /></div>
+            <div className="talent-card-v2__name">{t.name.split(' ')[0]}</div>
+            <div className="talent-card-v2__title">{t.title.split(' ').slice(0,2).join(' ')}</div>
+            <div className="talent-card-v2__stars">{'⭐'.repeat(Math.min(5, Math.round(t.ratingNum)))}</div>
+            <button className="btn-hire">Hire</button>
+          </div>
+        ))}
+      </div>
+
+      {filteredTalent.map(t => (
+        <div key={t.id} className="talent-card fade-in">
+          <div className="talent-card__avatar" style={{ background: `linear-gradient(135deg, ${t.color}, ${t.color}88)` }}>{t.avatar}<div className={`talent-card__status talent-card__status--${t.status}`} /></div>
+          <div className="talent-card__info">
+            <div className="talent-card__name">{t.name} {t.verified && <div className="talent-card__verified">✓</div>}</div>
+            <div className="talent-card__title">{t.title}</div>
+            <div className="talent-card__skills">{t.skills.map((s, i) => <span key={i} className="talent-card__skill">{s}</span>)}</div>
+            <div className="talent-card__rate">{t.rate}</div>
+            <div className="talent-card__rating">⭐ {t.ratingNum} ({t.reviews} reviews)</div>
+          </div>
+        </div>
+      ))}
+    </div></div>
+  )
+}
+
 // ═══ BOTTOM NAV ═══
 function BottomNav({ active, onChange }: { active: string, onChange: (tab: string) => void }) {
   const tabs = [
     { id: 'home', icon: Icons.home, label: 'Home' },
-    { id: 'jobs', icon: Icons.search, label: 'Search' },
+    { id: 'jobs', icon: Icons.jobs, label: 'Jobs' },
+    { id: 'talent', icon: Icons.talent, label: 'Talent' },
     { id: 'gigs', icon: Icons.gigs, label: 'Gigs' },
-    { id: 'wallet', icon: Icons.wallet, label: 'Wallet' },
     { id: 'profile', icon: Icons.profile, label: 'Profile' },
   ]
   return (
@@ -830,16 +876,17 @@ export default function App() {
       <div className="navbar">
         <div className="navbar__logo"><div className="navbar__logo-icon">Hz</div><span>{APP.name}</span></div>
         <div className="navbar__actions">
-          <button className="navbar__btn" style={{ position: 'relative' }} onClick={() => setActiveTab('alerts')}>{Icons.bell}<div className="navbar__notif-dot" /></button>
+          <button className="navbar__btn" style={{ position: 'relative' }}>{Icons.bell}<div className="navbar__notif-dot" /></button>
           <div className="navbar__avatar" onClick={() => setActiveTab('profile')}>{userName.charAt(0).toUpperCase()}</div>
         </div>
       </div>
       {activeTab === 'home' && <HomePage userName={userName} jobs={activeJobs} savedJobIds={savedJobIds} onJobClick={setSelectedJob} onTabChange={setActiveTab} onSaveJob={handleSaveJob} userProfile={userProfile} />}
       {activeTab === 'jobs' && <JobsFeedPage jobs={activeJobs} savedJobIds={savedJobIds} onJobClick={setSelectedJob} onSaveJob={handleSaveJob} />}
+      {activeTab === 'talent' && <TalentPage />}
       {activeTab === 'gigs' && <MarketplacePage userName={userName} />}
       {activeTab === 'wallet' && <WalletPage userProfile={userProfile} onCheckin={handleCheckin} />}
-      {activeTab === 'alerts' && <LeaderboardPage />}
-      {activeTab === 'profile' && <ProfilePage userName={userName} userEmail={userEmail} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} userProfile={userProfile} />}
+      {activeTab === 'leaderboard' && <LeaderboardPage />}
+      {activeTab === 'profile' && <ProfilePage userName={userName} userEmail={userEmail} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} userProfile={userProfile} onTabChange={setActiveTab} />}
       <BottomNav active={activeTab} onChange={setActiveTab} />
       {toast && <div className={`toast toast--${toast.type}`}>{toast.msg}</div>}
     </div>

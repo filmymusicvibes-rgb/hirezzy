@@ -571,7 +571,7 @@ export default function App() {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [userName, setUserName] = useState('')
   const [userEmail, setUserEmail] = useState('')
-  const [theme, setTheme] = useState(() => localStorage.getItem('hz-theme') || 'dark')
+  const [theme, setTheme] = useState(() => localStorage.getItem('hz-theme') || 'light')
   const [activeTab, setActiveTab] = useState('home')
   const [selectedJob, setSelectedJob] = useState<any>(null)
   const [toast, setToast] = useState<{ msg: string, type: string } | null>(null)
@@ -604,12 +604,12 @@ export default function App() {
   if (!firebaseUser) return <AuthPage onLogin={handleLogin} />
 
   if (selectedJob) return (
-    <>
+    <div className="app">
       <div className="navbar"><div className="navbar__logo"><div className="navbar__logo-icon">Hz</div><span>{APP.name}</span></div></div>
       <JobDetailsPage job={selectedJob} onBack={() => setSelectedJob(null)} onApply={handleApply} />
       <BottomNav active={activeTab} onChange={t => { setSelectedJob(null); setActiveTab(t) }} />
       {toast && <div className={`toast toast--${toast.type}`}>{toast.msg}</div>}
-    </>
+    </div>
   )
 
   return (

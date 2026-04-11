@@ -273,6 +273,10 @@ function JobsFeedPage({ jobs, savedJobIds, onJobClick, onSaveJob }: { jobs: any[
 
 // ═══ JOB DETAILS ═══
 function JobDetailsPage({ job, onBack, onApply }: { job: any, onBack: () => void, onApply: () => void }) {
+  const [showForm, setShowForm] = useState(false)
+  const [coverLetter, setCoverLetter] = useState('')
+  const [applying, setApplying] = useState(false)
+
   const fmtSalary = () => {
     try {
       const min = typeof job.salaryMin === 'number' ? job.salaryMin : 0
@@ -282,6 +286,13 @@ function JobDetailsPage({ job, onBack, onApply }: { job: any, onBack: () => void
       return `${job.currency || '$'}${min}-${max}${job.unit || ''}`
     } catch { return 'Competitive' }
   }
+
+  const handleSubmitApplication = async () => {
+    setApplying(true)
+    await onApply()
+    setApplying(false)
+  }
+
   return (
     <div className="page"><div className="page__content slide-up">
       <button onClick={onBack} className="btn-back">← Back</button>
@@ -309,9 +320,29 @@ function JobDetailsPage({ job, onBack, onApply }: { job: any, onBack: () => void
           <p>• Proficiency in {(job.skills || []).join(', ')}</p></>}
         </div>
       </div>
-      <div className="detail-sticky">
-        <button className="btn btn--primary" onClick={onApply} style={{ fontSize: '1rem', padding: '16px' }}>📝 Apply Now</button>
-      </div>
+
+      {/* ─── Application Form ─── */}
+      {!showForm ? (
+        <div className="detail-sticky">
+          <button className="btn btn--primary" onClick={() => setShowForm(true)} style={{ fontSize: '1rem', padding: '16px' }}>📝 Apply Now</button>
+        </div>
+      ) : (
+        <div className="slide-up" style={{ background: 'var(--bg-card)', border: 'var(--card-border)', borderRadius: 'var(--radius)', padding: '20px', marginTop: '12px' }}>
+          <h3 style={{ marginBottom: '16px', fontSize: '1rem' }}>📋 Application Form</h3>
+          <div className="form-group">
+            <label>Why are you a good fit?</label>
+            <textarea className="form-input" rows={4} placeholder="Tell the recruiter why you're perfect for this role..." value={coverLetter} onChange={e => setCoverLetter(e.target.value)} style={{ resize: 'vertical', minHeight: '100px' }} />
+          </div>
+          <div className="form-group">
+            <label>Resume (optional)</label>
+            <input className="form-input" type="file" accept=".pdf,.doc,.docx" />
+          </div>
+          <button className="btn btn--primary mt-2" disabled={applying} onClick={handleSubmitApplication} style={{ fontSize: '0.95rem', padding: '14px' }}>
+            {applying ? '⏳ Submitting...' : '🚀 Submit Application'}
+          </button>
+          <button className="btn btn--ghost mt-1" onClick={() => setShowForm(false)}>Cancel</button>
+        </div>
+      )}
     </div></div>
   )
 }
@@ -324,8 +355,50 @@ function MarketplacePage({ userName: _userName }: { userName: string }) {
   const [gigTitle, setGigTitle] = useState('')
   const [gigCategory, setGigCategory] = useState('')
   const [gigPrice, setGigPrice] = useState('')
+  const [gigSkills, setGigSkills] = useState<string[]>([])
   const [gigPosting, setGigPosting] = useState(false)
+  const [selectedGig, setSelectedGig] = useState<any>(null)
   const filteredTalent = searchSkill ? DEMO_TALENTS.filter(t => t.skills.some(s => s.toLowerCase().includes(searchSkill.toLowerCase())) || t.title.toLowerCase().includes(searchSkill.toLowerCase())) : DEMO_TALENTS
+
+  const toggleSkill = (s: string) => {
+    setGigSkills(prev => prev.includes(s) ? prev.filter(x => x !== s) : prev.length < 5 ? [...prev, s] : prev)
+  }
+
+  // ─── Gig Detail View ───
+  if (selectedGig) return (
+    <div className="page"><div className="page__content slide-up">
+      <button onClick={() => setSelectedGig(null)} className="btn-back">← Back to Gigs</button>
+      <div style={{ textAlign: 'center', padding: '24px 0' }}>
+        <div style={{ fontSize: '3rem', marginBottom: '12px' }}>{selectedGig.icon}</div>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>{selectedGig.title}</h2>
+        <p className="text-muted text-sm mt-1">by {selectedGig.seller}</p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '12px' }}>
+          <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '1.2rem' }}>${selectedGig.price}</span>
+          <span>⭐ {selectedGig.rating}</span>
+          <span className="text-muted">{selectedGig.orders} orders</span>
+        </div>
+      </div>
+      <div className="detail-grid">
+        <div className="detail-grid__item"><div className="detail-grid__icon">💰</div><div className="detail-grid__label">Price</div><div className="detail-grid__value">${selectedGig.price}</div></div>
+        <div className="detail-grid__item"><div className="detail-grid__icon">⭐</div><div className="detail-grid__label">Rating</div><div className="detail-grid__value">{selectedGig.rating}/5</div></div>
+        <div className="detail-grid__item"><div className="detail-grid__icon">📦</div><div className="detail-grid__label">Orders</div><div className="detail-grid__value">{selectedGig.orders}+</div></div>
+        <div className="detail-grid__item"><div className="detail-grid__icon">⏱️</div><div className="detail-grid__label">Delivery</div><div className="detail-grid__value">3-5 days</div></div>
+      </div>
+      <div className="detail-section">
+        <h3>About This Gig</h3>
+        <div className="detail-desc">
+          <p>Professional {selectedGig.title.toLowerCase()} service by {selectedGig.seller}.</p>
+          <p>• High quality deliverables</p>
+          <p>• Unlimited revisions</p>
+          <p>• Fast turnaround</p>
+          <p>• 100% satisfaction guaranteed</p>
+        </div>
+      </div>
+      <div className="detail-sticky">
+        <button className="btn btn--primary" style={{ fontSize: '1rem', padding: '16px' }}>🛒 Order Now — ${selectedGig.price}</button>
+      </div>
+    </div></div>
+  )
 
   return (
     <div className="page"><div className="page__content">
@@ -340,13 +413,13 @@ function MarketplacePage({ userName: _userName }: { userName: string }) {
         <div className="section-header"><h2>Popular Gigs</h2><span className="text-sm text-muted">{DEMO_GIGS.length} gigs</span></div>
         <div className="gigs-grid">
           {DEMO_GIGS.map(gig => (
-            <div key={gig.id} className="gig-card-v2">
+            <div key={gig.id} className="gig-card-v2" onClick={() => setSelectedGig(gig)}>
               <div className="gig-card-v2__banner" style={{ background: `linear-gradient(135deg, ${gig.color}33, ${gig.color}11)` }}><span className="gig-card-v2__icon">{gig.icon}</span></div>
               <div className="gig-card-v2__body">
                 <div className="gig-card-v2__title">{gig.title}</div>
                 <div className="gig-card-v2__seller">{gig.seller}</div>
                 <div className="gig-card-v2__footer"><span className="gig-card-v2__price">${gig.price}</span><span className="gig-card-v2__rating">⭐ {gig.rating}</span></div>
-                <button className="btn-detail">View Details</button>
+                <button className="btn-detail" onClick={e => { e.stopPropagation(); setSelectedGig(gig) }}>View Details</button>
               </div>
             </div>
           ))}
@@ -382,17 +455,22 @@ function MarketplacePage({ userName: _userName }: { userName: string }) {
         ))}
       </>}
 
+      {/* ─── Post Gig Modal ─── */}
       {showPost && <div className="modal-overlay" onClick={() => setShowPost(false)}><div className="modal-sheet" onClick={e => e.stopPropagation()}>
         <div className="modal-sheet__handle" /><h2>➕ Post Your Gig</h2>
         <div className="form-group"><label>Gig Title</label><input className="form-input" placeholder="I will edit your YouTube video..." value={gigTitle} onChange={e => setGigTitle(e.target.value)} /></div>
         <div className="form-group"><label>Category</label><select className="form-input" value={gigCategory} onChange={e => setGigCategory(e.target.value)}><option value="">Select</option>{GIG_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}</select></div>
         <div className="form-group"><label>Price ({WALLET.currency})</label><input className="form-input" type="number" placeholder="500" value={gigPrice} onChange={e => setGigPrice(e.target.value)} /></div>
-        <div className="form-group"><label>Skills (Max 5)</label><div className="skill-selector mt-1">{SKILLS.slice(0, 15).map(s => <button key={s} className="skill-tag">{s}</button>)}</div></div>
+        <div className="form-group"><label>Skills (Max 5) — {gigSkills.length}/5 selected</label>
+          <div className="skill-selector mt-1">{SKILLS.slice(0, 15).map(s => (
+            <button key={s} className={`skill-tag ${gigSkills.includes(s) ? 'skill-tag--selected' : ''}`} onClick={() => toggleSkill(s)}>{gigSkills.includes(s) ? '✓ ' : ''}{s}</button>
+          ))}</div>
+        </div>
         <button className="btn btn--primary mt-2" disabled={gigPosting || !gigTitle} onClick={async () => {
           setGigPosting(true)
           try {
-            await postGig({ title: gigTitle, category: gigCategory, price: Number(gigPrice) || 0, seller: _userName || 'User', icon: '🎯', color: '#6C5CE7' })
-            setShowPost(false); setGigTitle(''); setGigCategory(''); setGigPrice('')
+            await postGig({ title: gigTitle, category: gigCategory, price: Number(gigPrice) || 0, seller: _userName || 'User', icon: '🎯', color: '#6C5CE7', skills: gigSkills })
+            setShowPost(false); setGigTitle(''); setGigCategory(''); setGigPrice(''); setGigSkills([])
           } catch { }
           setGigPosting(false)
         }}>{gigPosting ? '⏳ Posting...' : '🚀 Post Gig'}</button>

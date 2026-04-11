@@ -2077,3 +2077,27 @@ h1, h2, h3, h4, h5, h6,
 [data-theme="light"] .feature-card:hover { border-color: rgba(91,76,219,0.2); box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
 [data-theme="light"] .hero__tag { background: rgba(91,76,219,0.08); border-color: rgba(91,76,219,0.15); }
 [data-theme="light"] .section-divider { background: linear-gradient(90deg, transparent, rgba(0,0,0,0.06), transparent); }
+
+/* ─── Skill Tag Toggle ─── */
+.skill-tag {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.skill-tag:hover { border-color: var(--secondary); color: var(--secondary); }
+.skill-tag--selected {
+  background: rgba(0,230,118,0.12) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+  font-weight: 600;
+}
+[data-theme="light"] .skill-tag { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.1); color: #555; }
+[data-theme="light"] .skill-tag--selected { background: rgba(0,184,101,0.1) !important; border-color: #00B865 !important; color: #00B865 !important; }
+
+/* ─── Textarea ─── */
+textarea.form-input { font-family: var(--font-body); line-height: 1.6; }

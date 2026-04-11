@@ -297,7 +297,7 @@ function JobDetailsPage({ job, onBack, onApply }: { job: any, onBack: () => void
 }
 
 // ═══ GIG MARKETPLACE ═══
-function MarketplacePage({ userName }: { userName: string }) {
+function MarketplacePage({ userName: _userName }: { userName: string }) {
   const [view, setView] = useState<'gigs' | 'talent'>('gigs')
   const [showPost, setShowPost] = useState(false)
   const [searchSkill, setSearchSkill] = useState('')

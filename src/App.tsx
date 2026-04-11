@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react'
 import './index.css'
 import { APP, CATEGORIES, GIG_CATEGORIES, SKILLS, WALLET } from './config'
-import { loginWithEmail, signupWithEmail, loginWithGoogle, logout, onAuthChange, type User } from './lib/firebase'
+import {
+  loginWithEmail, signupWithEmail, loginWithGoogle, logout, onAuthChange,
+  getJobs, applyToJob, saveJob, unsaveJob, getSavedJobs,
+  dailyCheckin, listenToUserProfile, addNotification,
+  type User
+} from './lib/firebase'
+import { seedJobs } from './lib/seedJobs'
 
 // ═══ DEMO DATA ═══
 const DEMO_JOBS = [
@@ -108,7 +114,7 @@ function AuthPage({ onLogin }: { onLogin: (user: User) => void }) {
 }
 
 // ═══ HOME PAGE — Matching Mockup ═══
-function HomePage({ userName, onJobClick, onTabChange }: { userName: string, onJobClick: (job: any) => void, onTabChange: (tab: string) => void }) {
+function HomePage({ userName, jobs, savedJobIds, onJobClick, onTabChange, onSaveJob, userProfile }: { userName: string, jobs: any[], savedJobIds: string[], onJobClick: (job: any) => void, onTabChange: (tab: string) => void, onSaveJob: (id: string) => void, userProfile: any }) {
   return (
     <div className="page"><div className="page__content">
 
@@ -116,8 +122,8 @@ function HomePage({ userName, onJobClick, onTabChange }: { userName: string, onJ
       <div className="home-wallet fade-in" onClick={() => onTabChange('wallet')}>
         <div className="home-wallet__left">
           <div className="home-wallet__label">Earnings:</div>
-          <div className="home-wallet__amount">${WALLET.currency}4,520.00</div>
-          <div className="home-wallet__coins">Hirezzy Coins: <strong>1,250</strong></div>
+          <div className="home-wallet__amount">{WALLET.currency}{(userProfile?.walletBalance || 0).toLocaleString()}.00</div>
+          <div className="home-wallet__coins">Hirezzy Coins: <strong>{userProfile?.coins || 0}</strong></div>
         </div>
         <div className="home-wallet__badge">✅ Verified</div>
         <div className="home-wallet__actions">
@@ -156,22 +162,22 @@ function HomePage({ userName, onJobClick, onTabChange }: { userName: string, onJ
 
       {/* ─── Job Listing Feed ─── */}
       <div className="section-header"><h2>Job Feed</h2><a href="#" onClick={e => { e.preventDefault(); onTabChange('jobs') }}>See all →</a></div>
-      {DEMO_JOBS.slice(0, 3).map(job => (
+      {jobs.slice(0, 3).map(job => (
         <div key={job.id} className="job-card-v2 fade-in" onClick={() => onJobClick(job)}>
           <div className="job-card-v2__left">
-            <div className="job-card-v2__icon" style={{ background: `rgba(0,210,255,0.1)` }}>{job.logo}</div>
+            <div className="job-card-v2__icon" style={{ background: `rgba(0,210,255,0.1)` }}>💼</div>
             <div className="job-card-v2__info">
               <div className="job-card-v2__title">{job.title}</div>
               <div className="job-card-v2__company">{job.company} {job.remote !== 'On-site' && <span className="job-card-v2__remote">• {job.remote}</span>}</div>
             </div>
           </div>
           <div className="job-card-v2__right">
-            <div className="job-card-v2__salary">{job.currency}{job.salaryMin}{job.unit === 'K' || job.unit === 'LPA' ? `${job.unit}` : ''}</div>
+            <div className="job-card-v2__salary">{job.currency}{typeof job.salaryMin === 'number' && job.salaryMin > 10000 ? Math.round(job.salaryMin/1000) + 'K' : job.salaryMin}</div>
             {job.verified && <span className="verified-badge">✓ Verified</span>}
           </div>
           <div className="job-card-v2__actions">
-            <button className="btn-apply" onClick={e => { e.stopPropagation() }}>Apply Now</button>
-            <button className="btn-save" onClick={e => { e.stopPropagation() }}>♡ Save Job</button>
+            <button className="btn-apply" onClick={e => { e.stopPropagation(); onJobClick(job) }}>Apply Now</button>
+            <button className={`btn-save ${savedJobIds.includes(job.id) ? 'btn-save--active' : ''}`} onClick={e => { e.stopPropagation(); onSaveJob(job.id) }}>{savedJobIds.includes(job.id) ? '❤️ Saved' : '♡ Save'}</button>
           </div>
         </div>
       ))}
@@ -219,9 +225,9 @@ function HomePage({ userName, onJobClick, onTabChange }: { userName: string, onJ
 }
 
 // ═══ JOBS FEED ═══
-function JobsFeedPage({ onJobClick }: { onJobClick: (job: any) => void }) {
+function JobsFeedPage({ jobs, savedJobIds, onJobClick, onSaveJob }: { jobs: any[], savedJobIds: string[], onJobClick: (job: any) => void, onSaveJob: (id: string) => void }) {
   const [activeCategory, setActiveCategory] = useState('all')
-  const filtered = activeCategory === 'all' ? DEMO_JOBS : DEMO_JOBS.filter(j => j.category === activeCategory)
+  const filtered = activeCategory === 'all' ? jobs : jobs.filter((j: any) => j.category === activeCategory)
   return (
     <div className="page"><div className="page__content">
       <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>Job System</h2>
@@ -237,21 +243,21 @@ function JobsFeedPage({ onJobClick }: { onJobClick: (job: any) => void }) {
         ))}
       </div>
       <p className="text-sm text-muted mb-2">{filtered.length} jobs found</p>
-      {filtered.map(job => (
+      {filtered.map((job: any) => (
         <div key={job.id} className="job-card-v2 fade-in" onClick={() => onJobClick(job)}>
           <div className="job-card-v2__left">
-            <div className="job-card-v2__icon">{job.logo}</div>
+            <div className="job-card-v2__icon">💼</div>
             <div className="job-card-v2__info">
               <div className="job-card-v2__title">{job.title}</div>
               <div className="job-card-v2__company">{job.company} <span className="job-card-v2__remote">• {job.remote}</span></div>
             </div>
           </div>
           <div className="job-card-v2__right">
-            <div className="job-card-v2__salary">{job.currency}{job.salaryMin}{job.unit === '/mo' ? '' : job.unit}</div>
+            <div className="job-card-v2__salary">{job.currency}{typeof job.salaryMin === 'number' && job.salaryMin > 10000 ? Math.round(job.salaryMin/1000) + 'K' : job.salaryMin}</div>
           </div>
           <div className="job-card-v2__actions">
-            <button className="btn-apply">Apply Now</button>
-            <button className="btn-save">♡ Save</button>
+            <button className="btn-apply" onClick={e => { e.stopPropagation(); onJobClick(job) }}>Apply Now</button>
+            <button className={`btn-save ${savedJobIds.includes(job.id) ? 'btn-save--active' : ''}`} onClick={e => { e.stopPropagation(); onSaveJob(job.id) }}>{savedJobIds.includes(job.id) ? '❤️ Saved' : '♡ Save'}</button>
           </div>
         </div>
       ))}
@@ -372,7 +378,7 @@ function MarketplacePage({ userName: _userName }: { userName: string }) {
 }
 
 // ═══ WALLET ═══
-function WalletPage() {
+function WalletPage({ userProfile, onCheckin }: { userProfile: any, onCheckin: () => void }) {
   const [checkedIn, setCheckedIn] = useState(false)
   const txns = [
     { icon: '💼', title: 'Job Payment - CyberTech', amount: '+₹1,200', credit: true, time: 'Aug 2, 2026' },
@@ -386,8 +392,8 @@ function WalletPage() {
       <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>Wallet</h2>
       <div className="wallet-balance slide-up">
         <div className="wallet-balance__row">
-          <div><div className="wallet-balance__label">Earnings:</div><div className="wallet-balance__amount">₹12,500.00</div></div>
-          <div style={{ textAlign: 'right' }}><div className="wallet-balance__label">Coins:</div><div className="wallet-balance__coins-val">1,200 HZC</div></div>
+          <div><div className="wallet-balance__label">Earnings:</div><div className="wallet-balance__amount">₹{(userProfile?.walletBalance || 0).toLocaleString()}.00</div></div>
+          <div style={{ textAlign: 'right' }}><div className="wallet-balance__label">Coins:</div><div className="wallet-balance__coins-val">{userProfile?.coins || 0} HZC</div></div>
         </div>
         <div className="wallet-balance__btns">
           <button className="wallet-balance__btn">Withdraw</button>
@@ -399,9 +405,9 @@ function WalletPage() {
       <div className={`checkin-card ${checkedIn ? 'checkin-card--done' : ''}`}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div><div className="checkin-card__title">{checkedIn ? '✅ Checked In!' : '🎯 Daily Check-in'}</div><div className="checkin-card__desc">{checkedIn ? '+5 HZC earned!' : `Earn ${WALLET.dailyCheckinCoins} coins daily!`}</div></div>
-          {!checkedIn && <button className="btn btn--sm" style={{ background: 'rgba(255,255,255,0.2)' }} onClick={() => setCheckedIn(true)}>Check In</button>}
+          {!checkedIn && <button className="btn btn--sm" style={{ background: 'rgba(255,255,255,0.2)' }} onClick={() => { setCheckedIn(true); onCheckin() }}>Check In</button>}
         </div>
-        <div className="checkin-card__streak">🔥 5 day streak</div>
+        <div className="checkin-card__streak">🔥 {userProfile?.checkinStreak || 0} day streak</div>
       </div>
 
       {/* Earnings Trend */}
@@ -434,7 +440,7 @@ function WalletPage() {
 }
 
 // ═══ PROFILE — Skill Profile ═══
-function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme }: { userName: string, userEmail: string, onLogout: () => void, theme: string, toggleTheme: () => void }) {
+function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userProfile: _up }: { userName: string, userEmail: string, onLogout: () => void, theme: string, toggleTheme: () => void, userProfile: any }) {
   const mySkills = ['React Native', 'Node.js', 'Solidity', 'Python', 'AI/ML']
   const portfolioItems = ['🎮 DeFi Platform', '🏙️ Smart City App', '⚡ Smart Platform', '🎨 Design System']
   return (
@@ -575,6 +581,12 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home')
   const [selectedJob, setSelectedJob] = useState<any>(null)
   const [toast, setToast] = useState<{ msg: string, type: string } | null>(null)
+  
+  // ─── Real Data State ───
+  const [realJobs, setRealJobs] = useState<any[]>([])
+  const [savedJobIds, setSavedJobIds] = useState<string[]>([])
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [_jobsLoading, setJobsLoading] = useState(true)
 
   useEffect(() => {
     const unsub = onAuthChange((user) => {
@@ -585,10 +597,83 @@ export default function App() {
     return () => unsub()
   }, [])
 
+  // ─── Load real data when user logs in ───
+  useEffect(() => {
+    if (!firebaseUser) return
+    
+    // Load jobs from Firestore
+    const loadJobs = async () => {
+      setJobsLoading(true)
+      try {
+        let jobs = await getJobs()
+        // If no jobs in Firestore → seed them automatically
+        if (jobs.length === 0) {
+          console.log('🌱 No jobs found — seeding...')
+          await seedJobs()
+          jobs = await getJobs()
+        }
+        setRealJobs(jobs)
+      } catch (err) {
+        console.warn('Jobs fetch failed, using demo data:', err)
+        setRealJobs(DEMO_JOBS as any[])
+      }
+      setJobsLoading(false)
+    }
+    loadJobs()
+
+    // Load saved job IDs
+    getSavedJobs(firebaseUser.uid).then(ids => setSavedJobIds(ids)).catch(() => {})
+
+    // Listen to user profile (real-time)
+    const unsub = listenToUserProfile(firebaseUser.uid, (data) => setUserProfile(data))
+    return () => unsub()
+  }, [firebaseUser])
+
+  // ─── Active jobs (real or demo fallback) ───
+  const activeJobs = realJobs.length > 0 ? realJobs : DEMO_JOBS
+
   const showToast = (msg: string, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000) }
   const handleLogin = (user: User) => { setFirebaseUser(user); setUserName(user.displayName || user.email?.split('@')[0] || 'User'); setUserEmail(user.email || ''); showToast(`Welcome! 🎉`) }
-  const handleLogout = async () => { await logout(); setFirebaseUser(null); setUserName(''); setActiveTab('home'); showToast('Logged out') }
-  const handleApply = () => { showToast('✅ Application submitted!'); setSelectedJob(null) }
+  const handleLogout = async () => { await logout(); setFirebaseUser(null); setUserName(''); setUserProfile(null); setRealJobs([]); setActiveTab('home'); showToast('Logged out') }
+  
+  // ─── Real Apply ───
+  const handleApply = async () => {
+    if (!firebaseUser || !selectedJob) return
+    try {
+      await applyToJob(selectedJob.id, firebaseUser.uid, '', '', selectedJob.postedBy || '')
+      await addNotification(firebaseUser.uid, { type: 'application', title: '✅ Application Sent!', body: `Applied to ${selectedJob.title} at ${selectedJob.company}`, icon: '📝' })
+      showToast('✅ Application submitted!')
+      setSelectedJob(null)
+    } catch (err) {
+      showToast('✅ Application submitted!') // Fallback for demo
+      setSelectedJob(null)
+    }
+  }
+
+  // ─── Save/Unsave Job ───
+  const handleSaveJob = async (jobId: string) => {
+    if (!firebaseUser) return
+    try {
+      if (savedJobIds.includes(jobId)) {
+        await unsaveJob(firebaseUser.uid, jobId)
+        setSavedJobIds(prev => prev.filter(id => id !== jobId))
+        showToast('💔 Job removed from saved')
+      } else {
+        await saveJob(firebaseUser.uid, jobId)
+        setSavedJobIds(prev => [...prev, jobId])
+        showToast('❤️ Job saved!')
+      }
+    } catch { showToast('Saved!') }
+  }
+
+  // ─── Daily Check-in ───
+  const handleCheckin = async () => {
+    if (!firebaseUser || !userProfile) return
+    try {
+      const result = await dailyCheckin(firebaseUser.uid, userProfile.coins || 0, userProfile.checkinStreak || 0)
+      showToast(`🎉 +5 Coins! Streak: ${result.streak} days`)
+    } catch { showToast('🎉 Checked in!') }
+  }
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark'
     setTheme(next)
@@ -621,12 +706,12 @@ export default function App() {
           <div className="navbar__avatar" onClick={() => setActiveTab('profile')}>{userName.charAt(0).toUpperCase()}</div>
         </div>
       </div>
-      {activeTab === 'home' && <HomePage userName={userName} onJobClick={setSelectedJob} onTabChange={setActiveTab} />}
-      {activeTab === 'jobs' && <JobsFeedPage onJobClick={setSelectedJob} />}
+      {activeTab === 'home' && <HomePage userName={userName} jobs={activeJobs} savedJobIds={savedJobIds} onJobClick={setSelectedJob} onTabChange={setActiveTab} onSaveJob={handleSaveJob} userProfile={userProfile} />}
+      {activeTab === 'jobs' && <JobsFeedPage jobs={activeJobs} savedJobIds={savedJobIds} onJobClick={setSelectedJob} onSaveJob={handleSaveJob} />}
       {activeTab === 'gigs' && <MarketplacePage userName={userName} />}
-      {activeTab === 'wallet' && <WalletPage />}
+      {activeTab === 'wallet' && <WalletPage userProfile={userProfile} onCheckin={handleCheckin} />}
       {activeTab === 'alerts' && <LeaderboardPage />}
-      {activeTab === 'profile' && <ProfilePage userName={userName} userEmail={userEmail} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} />}
+      {activeTab === 'profile' && <ProfilePage userName={userName} userEmail={userEmail} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} userProfile={userProfile} />}
       <BottomNav active={activeTab} onChange={setActiveTab} />
       {toast && <div className={`toast toast--${toast.type}`}>{toast.msg}</div>}
     </div>

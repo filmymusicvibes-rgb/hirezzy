@@ -633,6 +633,7 @@ function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userPr
   const [editRate, setEditRate] = useState(userProfile?.rate || '')
   const [editSkills, setEditSkills] = useState<string[]>(userProfile?.skills || [])
   const [editAvailability, setEditAvailability] = useState(userProfile?.availability || 'available')
+  const [editExperience, setEditExperience] = useState(userProfile?.experience || '')
 
   const toggleSkill = (s: string) => {
     setEditSkills(prev => prev.includes(s) ? prev.filter(x => x !== s) : prev.length < 10 ? [...prev, s] : prev)
@@ -644,7 +645,7 @@ function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userPr
     try {
       await updateUserProfile(auth.currentUser.uid, {
         name: editName, city: editCity, bio: editBio, phone: editPhone,
-        rate: editRate, skills: editSkills, availability: editAvailability
+        rate: editRate, skills: editSkills, availability: editAvailability, experience: editExperience
       })
       setEditing(false)
     } catch { }
@@ -727,6 +728,25 @@ function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userPr
             </div>
           </div>
         )}
+
+        {/* ─── Experience Level ─── */}
+        <div className="skill-profile__section">
+          <h3>Experience Level</h3>
+          {editing ? (
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
+              {['Fresher', 'Junior (1-2 Yrs)', 'Mid (3-5 Yrs)', 'Senior (5-8 Yrs)', 'Lead (8+ Yrs)'].map(lvl => (
+                <button key={lvl} className={`skill-tag ${editExperience === lvl ? 'skill-tag--selected' : ''}`} onClick={() => setEditExperience(lvl)}>
+                  {editExperience === lvl ? '✓ ' : ''}{lvl}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+              <span className="text-sm text-muted">Level</span>
+              <span className="skill-chip" style={{ background: 'var(--primary-glow)', borderColor: 'var(--primary)' }}>{userProfile?.experience || 'Not set'}</span>
+            </div>
+          )}
+        </div>
 
         {/* ─── Portfolio ─── */}
         <div className="skill-profile__section">

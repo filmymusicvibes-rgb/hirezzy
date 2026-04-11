@@ -585,6 +585,11 @@ function MarketplacePage({ userName: _userName }: { userName: string }) {
 // ═══ WALLET ═══
 function WalletPage({ userProfile, onCheckin }: { userProfile: any, onCheckin: () => void }) {
   const [checkedIn, setCheckedIn] = useState(false)
+  const [showWithdraw, setShowWithdraw] = useState(false)
+  const [withdrawAmt, setWithdrawAmt] = useState('')
+  const [upiId, setUpiId] = useState('')
+  const balance = userProfile?.walletBalance || 0
+  const coins = userProfile?.coins || 0
   const txns = [
     { icon: '💼', title: 'Job Payment - CyberTech', amount: '+₹1,200', credit: true, time: 'Aug 2, 2026' },
     { icon: '💳', title: 'Withdrawal - Bank Transfer', amount: '-₹800', credit: false, time: 'Aug 1, 2026' },
@@ -597,12 +602,12 @@ function WalletPage({ userProfile, onCheckin }: { userProfile: any, onCheckin: (
       <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>Wallet</h2>
       <div className="wallet-balance slide-up">
         <div className="wallet-balance__row">
-          <div><div className="wallet-balance__label">Earnings:</div><div className="wallet-balance__amount">₹{(userProfile?.walletBalance || 0).toLocaleString()}.00</div></div>
-          <div style={{ textAlign: 'right' }}><div className="wallet-balance__label">Coins:</div><div className="wallet-balance__coins-val">{userProfile?.coins || 0} HZC</div></div>
+          <div><div className="wallet-balance__label">Earnings:</div><div className="wallet-balance__amount">₹{balance.toLocaleString()}.00</div></div>
+          <div style={{ textAlign: 'right' }}><div className="wallet-balance__label">Coins:</div><div className="wallet-balance__coins-val">{coins} HZC</div></div>
         </div>
         <div className="wallet-balance__btns">
-          <button className="wallet-balance__btn">Withdraw</button>
-          <button className="wallet-balance__btn wallet-balance__btn--outline">Redeem</button>
+          <button className="wallet-balance__btn" onClick={() => setShowWithdraw(true)}>Withdraw</button>
+          <button className="wallet-balance__btn wallet-balance__btn--outline" onClick={() => alert(`You have ${coins} HZC.\n${coins >= 1000 ? `Convert to ₹${Math.floor(coins / 10)}!` : 'Earn more coins to redeem!'}`)}>Redeem</button>
         </div>
       </div>
 
@@ -629,6 +634,21 @@ function WalletPage({ userProfile, onCheckin }: { userProfile: any, onCheckin: (
             </div>
           )
         })}
+      </div>
+
+      {/* Quick Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', margin: '16px 0' }}>
+        {[
+          { label: 'Total Earned', val: `₹${balance}`, icon: '💰' },
+          { label: 'This Month', val: '₹0', icon: '📆' },
+          { label: 'Pending', val: '₹0', icon: '⏳' },
+        ].map((s, i) => (
+          <div key={i} style={{ background: 'var(--card-bg)', borderRadius: '14px', padding: '12px', textAlign: 'center', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '1.2rem' }}>{s.icon}</div>
+            <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{s.val}</div>
+            <div className="text-sm text-muted">{s.label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Transaction History */}
@@ -665,6 +685,32 @@ function WalletPage({ userProfile, onCheckin }: { userProfile: any, onCheckin: (
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>💰 <strong>1000 HZC = ₹100</strong> — Withdraw anytime!</p>
         <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Minimum withdrawal: 500 HZC</p>
       </div>
+
+      {/* Withdraw Modal */}
+      {showWithdraw && (
+        <div className="modal-overlay" onClick={() => setShowWithdraw(false)}>
+          <div className="modal-content slide-up" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <h3 style={{ marginBottom: '12px' }}>💸 Withdraw Funds</h3>
+            <div style={{ background: 'var(--primary-glow)', borderRadius: '12px', padding: '12px', marginBottom: '12px', textAlign: 'center' }}>
+              <span className="text-sm text-muted">Available Balance</span>
+              <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--accent)' }}>₹{balance}.00</div>
+            </div>
+            <div className="form-group"><label>Amount (₹)</label><input className="form-input" type="number" value={withdrawAmt} onChange={e => setWithdrawAmt(e.target.value)} placeholder={`Min ₹${WALLET.minWithdraw}`} /></div>
+            <div className="form-group"><label>UPI ID / Bank</label><input className="form-input" value={upiId} onChange={e => setUpiId(e.target.value)} placeholder="name@upi or bank details" /></div>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+              <button className="btn btn--primary" style={{ flex: 1 }} onClick={() => {
+                const amt = parseInt(withdrawAmt)
+                if (!amt || amt < WALLET.minWithdraw) { alert(`Minimum withdrawal is ₹${WALLET.minWithdraw}`); return }
+                if (amt > balance) { alert('Insufficient balance!'); return }
+                if (!upiId) { alert('Enter UPI ID or bank details'); return }
+                alert('✅ Withdrawal request submitted! Processing in 24-48 hours.')
+                setShowWithdraw(false); setWithdrawAmt(''); setUpiId('')
+              }}>📤 Withdraw</button>
+              <button className="btn btn--ghost" onClick={() => setShowWithdraw(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div></div>
   )
 }
@@ -1005,16 +1051,51 @@ function NotificationsPage({ onBack }: { onBack: () => void }) {
   )
 }
 
-// ═══ LEADERBOARD (Phase 3) ═══
+// ═══ LEADERBOARD (Enhanced) ═══
 function LeaderboardPage() {
   const [tab, setTab] = useState<'freelancers' | 'earners'>('freelancers')
+  const podiumColors = ['linear-gradient(135deg, #FFD700, #FFA500)', 'linear-gradient(135deg, #C0C0C0, #A0A0A0)', 'linear-gradient(135deg, #CD7F32, #B87333)']
+
   return (
     <div className="page"><div className="page__content">
       <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>🏆 Leaderboard</h2>
-      <div className="auth__tabs" style={{ marginBottom: '16px' }}>
-        <button className={`auth__tab ${tab === 'freelancers' ? 'auth__tab--active' : ''}`} onClick={() => setTab('freelancers')}>Top Freelancers</button>
-        <button className={`auth__tab ${tab === 'earners' ? 'auth__tab--active' : ''}`} onClick={() => setTab('earners')}>Top Earners</button>
+
+      {/* Your Rank */}
+      <div style={{ background: 'linear-gradient(135deg, var(--primary), #8B5CF6)', borderRadius: '16px', padding: '16px', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div>
+          <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Your Rank</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>#--</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Points</div>
+          <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>0 HZC</div>
+        </div>
       </div>
+
+      <div className="auth__tabs" style={{ marginBottom: '16px' }}>
+        <button className={`auth__tab ${tab === 'freelancers' ? 'auth__tab--active' : ''}`} onClick={() => setTab('freelancers')}>🏅 Top Freelancers</button>
+        <button className={`auth__tab ${tab === 'earners' ? 'auth__tab--active' : ''}`} onClick={() => setTab('earners')}>💰 Top Earners</button>
+      </div>
+
+      {/* Top 3 Podium */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', justifyContent: 'center', alignItems: 'flex-end' }}>
+        {[1, 0, 2].map(idx => {
+          const t = DEMO_TALENTS[idx]
+          if (!t) return null
+          const heights = ['120px', '140px', '100px']
+          const medals = ['🥈', '🥇', '🥉']
+          return (
+            <div key={idx} style={{ background: podiumColors[idx], borderRadius: '16px', padding: '12px', textAlign: 'center', width: '90px', height: heights[[1,0,2].indexOf(idx)] }}>
+              <div style={{ fontSize: '1.5rem' }}>{medals[[1,0,2].indexOf(idx)]}</div>
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: `${t.color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '4px auto', fontSize: '1rem', fontWeight: 700, color: '#fff' }}>{t.avatar}</div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#fff' }}>{t.name.split(' ')[0]}</div>
+              <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.8)' }}>{t.rate}</div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Full List */}
       {DEMO_TALENTS.map((t, i) => (
         <div key={t.id} className="leaderboard-item fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
           <div className="leaderboard-item__rank" style={{ color: i === 0 ? '#FFD700' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'var(--text-dim)' }}>{i < 3 ? ['🥇','🥈','🥉'][i] : `#${i+1}`}</div>
@@ -1027,7 +1108,6 @@ function LeaderboardPage() {
             <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--accent)' }}>{t.rate}</div>
             <div className="text-sm text-muted">⭐ {t.ratingNum}</div>
           </div>
-          <button className="btn-hire" style={{ marginLeft: '8px' }}>View Profile</button>
         </div>
       ))}
     </div></div>

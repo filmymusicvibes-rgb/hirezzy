@@ -3,7 +3,7 @@ import './index.css'
 import { APP, CATEGORIES, GIG_CATEGORIES, SKILLS, WALLET } from './config'
 import {
   loginWithEmail, signupWithEmail, loginWithGoogle, logout, onAuthChange,
-  getJobs, postGig, applyToJob, saveJob, unsaveJob, getSavedJobs, getMyApplications,
+  getJobs, postGig, applyToJob, saveJob, unsaveJob, getSavedJobs, getMyApplications, searchTalent,
   dailyCheckin, listenToUserProfile, addNotification, updateUserProfile,
   auth, type User
 } from './lib/firebase'
@@ -914,41 +914,78 @@ function LeaderboardPage() {
   )
 }
 
-// ═══ TALENT PAGE (Standalone) ═══
+// ═══ TALENT PAGE (Firestore + Demo Fallback) ═══
 function TalentPage() {
   const [searchSkill, setSearchSkill] = useState('')
-  const filteredTalent = searchSkill ? DEMO_TALENTS.filter(t => t.skills.some(s => s.toLowerCase().includes(searchSkill.toLowerCase())) || t.title.toLowerCase().includes(searchSkill.toLowerCase())) : DEMO_TALENTS
+  const [realTalent, setRealTalent] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const COLORS = ['#6C5CE7', '#00D2FF', '#E17055', '#00E676', '#A29BFE', '#FD79A8', '#FDCB6E', '#636E72']
+
+  useEffect(() => {
+    searchTalent().then(data => { setRealTalent(data); setLoading(false) }).catch(() => setLoading(false))
+  }, [])
+
+  // Merge real Firestore users + demo data as fallback
+  const firestoreTalent = realTalent.map((u: any, i: number) => ({
+    id: u.id, name: u.name || 'User', title: u.bio || 'Professional',
+    skills: u.skills || [], rate: u.rate || 'Contact', ratingNum: u.rating || 4.5,
+    reviews: u.reviewCount || 0, status: u.availability || 'available',
+    verified: u.verified || false, avatar: (u.name || 'U').charAt(0).toUpperCase(),
+    color: COLORS[i % COLORS.length], city: u.city || ''
+  }))
+  const allTalent = firestoreTalent.length > 0 ? firestoreTalent : DEMO_TALENTS
+  const filtered = searchSkill ? allTalent.filter((t: any) =>
+    (t.skills || []).some((s: string) => s.toLowerCase().includes(searchSkill.toLowerCase())) ||
+    (t.title || '').toLowerCase().includes(searchSkill.toLowerCase()) ||
+    (t.name || '').toLowerCase().includes(searchSkill.toLowerCase()) ||
+    (t.city || '').toLowerCase().includes(searchSkill.toLowerCase())
+  ) : allTalent
+
   return (
     <div className="page"><div className="page__content">
       <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>👥 Find Talent</h2>
-      <div className="search-bar" style={{ marginTop: 0, marginBottom: '12px' }}><span className="search-bar__icon">{Icons.search}</span><input placeholder="Search by skill, role, name..." value={searchSkill} onChange={e => setSearchSkill(e.target.value)} /></div>
+      <div className="search-bar" style={{ marginTop: 0, marginBottom: '12px' }}><span className="search-bar__icon">{Icons.search}</span><input placeholder="Search by skill, role, name, city..." value={searchSkill} onChange={e => setSearchSkill(e.target.value)} />
+        {searchSkill && <button className="search-bar__filter" onClick={() => setSearchSkill('')}>✕</button>}
+      </div>
       <div className="filter-chips"><span className="filter-chip">📍 Location ▾</span><span className="filter-chip">💰 Rate ▾</span><span className="filter-chip">📊 Experience ▾</span><span className="filter-chip">⭐ Rating ▾</span></div>
 
-      <div className="section-header mt-2"><h2>Top Talent</h2><span className="text-sm text-muted">{filteredTalent.length} found</span></div>
-      <div className="hz-scroll mb-2">
-        {filteredTalent.slice(0, 4).map(t => (
-          <div key={t.id} className="talent-card-v2">
-            <div className="talent-card-v2__avatar" style={{ background: `linear-gradient(135deg, ${t.color}, ${t.color}88)` }}>{t.avatar}<div className={`talent-card__status talent-card__status--${t.status}`} /></div>
-            <div className="talent-card-v2__name">{t.name.split(' ')[0]}</div>
-            <div className="talent-card-v2__title">{t.title.split(' ').slice(0,2).join(' ')}</div>
-            <div className="talent-card-v2__stars">{'⭐'.repeat(Math.min(5, Math.round(t.ratingNum)))}</div>
-            <button className="btn-hire">Hire</button>
+      {loading && <p className="text-center text-muted" style={{ padding: '40px 0' }}>⏳ Loading talent...</p>}
+
+      {!loading && <>
+        <div className="section-header mt-2"><h2>{firestoreTalent.length > 0 ? 'Real Talent' : 'Top Talent'}</h2><span className="text-sm text-muted">{filtered.length} found</span></div>
+        <div className="hz-scroll mb-2">
+          {filtered.slice(0, 6).map((t: any) => (
+            <div key={t.id} className="talent-card-v2">
+              <div className="talent-card-v2__avatar" style={{ background: `linear-gradient(135deg, ${t.color}, ${t.color}88)` }}>{t.avatar}<div className={`talent-card__status talent-card__status--${t.status}`} /></div>
+              <div className="talent-card-v2__name">{(t.name || '').split(' ')[0]}</div>
+              <div className="talent-card-v2__title">{(t.title || '').split(' ').slice(0,2).join(' ')}</div>
+              <div className="talent-card-v2__stars">{'⭐'.repeat(Math.min(5, Math.round(t.ratingNum || 0)))}</div>
+              <button className="btn-hire">Hire</button>
+            </div>
+          ))}
+        </div>
+
+        {filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px 0' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🔍</div>
+            <p style={{ fontWeight: 600 }}>No talent found</p>
+            <p className="text-sm text-muted">Try different search terms</p>
+          </div>
+        )}
+
+        {filtered.map((t: any) => (
+          <div key={t.id} className="talent-card fade-in">
+            <div className="talent-card__avatar" style={{ background: `linear-gradient(135deg, ${t.color}, ${t.color}88)` }}>{t.avatar}<div className={`talent-card__status talent-card__status--${t.status}`} /></div>
+            <div className="talent-card__info">
+              <div className="talent-card__name">{t.name} {t.verified && <div className="talent-card__verified">✓</div>}</div>
+              <div className="talent-card__title">{t.title}{t.city ? ` • 📍 ${t.city}` : ''}</div>
+              <div className="talent-card__skills">{(t.skills || []).map((s: string, i: number) => <span key={i} className="talent-card__skill">{s}</span>)}</div>
+              <div className="talent-card__rate">{t.rate}</div>
+              <div className="talent-card__rating">⭐ {t.ratingNum} ({t.reviews} reviews)</div>
+            </div>
           </div>
         ))}
-      </div>
-
-      {filteredTalent.map(t => (
-        <div key={t.id} className="talent-card fade-in">
-          <div className="talent-card__avatar" style={{ background: `linear-gradient(135deg, ${t.color}, ${t.color}88)` }}>{t.avatar}<div className={`talent-card__status talent-card__status--${t.status}`} /></div>
-          <div className="talent-card__info">
-            <div className="talent-card__name">{t.name} {t.verified && <div className="talent-card__verified">✓</div>}</div>
-            <div className="talent-card__title">{t.title}</div>
-            <div className="talent-card__skills">{t.skills.map((s, i) => <span key={i} className="talent-card__skill">{s}</span>)}</div>
-            <div className="talent-card__rate">{t.rate}</div>
-            <div className="talent-card__rating">⭐ {t.ratingNum} ({t.reviews} reviews)</div>
-          </div>
-        </div>
-      ))}
+      </>}
     </div></div>
   )
 }

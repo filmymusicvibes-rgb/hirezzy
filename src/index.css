@@ -2101,3 +2101,17 @@ h1, h2, h3, h4, h5, h6,
 
 /* ─── Textarea ─── */
 textarea.form-input { font-family: var(--font-body); line-height: 1.6; }
+
+/* ─── Filter Chip Active ─── */
+.filter-chip { cursor: pointer; transition: all 0.2s ease; }
+.filter-chip--active {
+  background: rgba(108,92,231,0.15) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary-light) !important;
+  font-weight: 600;
+}
+[data-theme="light"] .filter-chip--active {
+  background: rgba(91,76,219,0.1) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}

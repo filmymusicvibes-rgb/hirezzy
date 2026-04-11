@@ -235,12 +235,42 @@ function HomePage({ userName: _un, jobs, savedJobIds, onJobClick, onTabChange, o
 // ═══ JOBS FEED ═══
 function JobsFeedPage({ jobs, savedJobIds, onJobClick, onSaveJob }: { jobs: any[], savedJobIds: string[], onJobClick: (job: any) => void, onSaveJob: (id: string) => void }) {
   const [activeCategory, setActiveCategory] = useState('all')
-  const filtered = activeCategory === 'all' ? jobs : jobs.filter((j: any) => j.category === activeCategory)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [locFilter, setLocFilter] = useState('')
+  const [typeFilter, setTypeFilter] = useState('')
+
+  const filtered = jobs.filter((j: any) => {
+    // Category filter
+    if (activeCategory !== 'all' && j.category !== activeCategory) return false
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      const matchTitle = (j.title || '').toLowerCase().includes(q)
+      const matchCompany = (j.company || '').toLowerCase().includes(q)
+      const matchSkills = (j.skills || []).some((s: string) => s.toLowerCase().includes(q))
+      const matchLocation = (j.location || '').toLowerCase().includes(q)
+      if (!matchTitle && !matchCompany && !matchSkills && !matchLocation) return false
+    }
+    // Location filter
+    if (locFilter && !(j.location || '').toLowerCase().includes(locFilter.toLowerCase())) return false
+    // Type filter
+    if (typeFilter && j.type !== typeFilter) return false
+    return true
+  })
+
   return (
     <div className="page"><div className="page__content">
-      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>Job System</h2>
-      <div className="search-bar"><span className="search-bar__icon">{Icons.search}</span><input placeholder="Search jobs, companies..." /><button className="search-bar__filter">⚙️</button></div>
-      <div className="categories-scroll" style={{ marginBottom: '16px' }}>
+      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>💼 Jobs</h2>
+
+      {/* ─── Search ─── */}
+      <div className="search-bar">
+        <span className="search-bar__icon">{Icons.search}</span>
+        <input placeholder="Search jobs, companies, skills..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+        {searchQuery && <button className="search-bar__filter" onClick={() => setSearchQuery('')}>✕</button>}
+      </div>
+
+      {/* ─── Category Chips ─── */}
+      <div className="categories-scroll" style={{ marginBottom: '10px' }}>
         <button className="category-chip" style={activeCategory === 'all' ? { background: 'var(--primary)', borderColor: 'var(--primary)' } : {}} onClick={() => setActiveCategory('all')}>
           <div className="category-chip__icon" style={{ background: 'rgba(108,92,231,0.15)' }}>📋</div><span className="category-chip__name" style={activeCategory === 'all' ? { color: 'white' } : {}}>All</span>
         </button>
@@ -250,14 +280,37 @@ function JobsFeedPage({ jobs, savedJobIds, onJobClick, onSaveJob }: { jobs: any[
           </button>
         ))}
       </div>
-      <p className="text-sm text-muted mb-2">{filtered.length} jobs found</p>
+
+      {/* ─── Quick Filters ─── */}
+      <div className="filter-chips" style={{ marginBottom: '12px' }}>
+        {['Remote', 'Hybrid', 'On-site'].map(t => (
+          <span key={t} className={`filter-chip ${typeFilter === t ? 'filter-chip--active' : ''}`} onClick={() => setTypeFilter(typeFilter === t ? '' : t)}>
+            {t === 'Remote' ? '🏠' : t === 'Hybrid' ? '🔄' : '🏢'} {t}
+          </span>
+        ))}
+        {['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad'].map(c => (
+          <span key={c} className={`filter-chip ${locFilter === c ? 'filter-chip--active' : ''}`} onClick={() => setLocFilter(locFilter === c ? '' : c)}>📍 {c}</span>
+        ))}
+      </div>
+
+      {/* ─── Results ─── */}
+      <p className="text-sm text-muted mb-2">{filtered.length} jobs found{searchQuery ? ` for "${searchQuery}"` : ''}</p>
+
+      {filtered.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🔍</div>
+          <p style={{ fontWeight: 600, marginBottom: '4px' }}>No jobs found</p>
+          <p className="text-sm text-muted">Try different keywords or filters</p>
+        </div>
+      )}
+
       {filtered.map((job: any) => (
         <div key={job.id} className="job-card-v2 fade-in" onClick={() => onJobClick(job)}>
           <div className="job-card-v2__left">
-            <div className="job-card-v2__icon">💼</div>
+            <div className="job-card-v2__icon">{job.logo || '💼'}</div>
             <div className="job-card-v2__info">
               <div className="job-card-v2__title">{job.title}</div>
-              <div className="job-card-v2__company">{job.company} <span className="job-card-v2__remote">• {job.remote}</span></div>
+              <div className="job-card-v2__company">{job.company} <span className="job-card-v2__remote">• {job.remote}</span>{job.verified && <span className="verified-badge" style={{ marginLeft: '6px', fontSize: '0.65rem' }}>✓</span>}</div>
             </div>
           </div>
           <div className="job-card-v2__right">

@@ -3,7 +3,7 @@ import './index.css'
 import { APP, CATEGORIES, GIG_CATEGORIES, SKILLS, WALLET } from './config'
 import {
   loginWithEmail, signupWithEmail, loginWithGoogle, logout, onAuthChange,
-  getJobs, postGig, applyToJob, saveJob, unsaveJob, getSavedJobs, getMyApplications, searchTalent,
+  getJobs, postJob, postGig, applyToJob, saveJob, unsaveJob, getSavedJobs, getMyApplications, searchTalent,
   dailyCheckin, listenToUserProfile, addNotification, updateUserProfile, uploadResume, sendOffer, placeGigOrder, getMyOrders,
   shortlistTalent, unshortlistTalent, getShortlistedTalent,
   auth, type User
@@ -69,6 +69,7 @@ function Splash({ onDone }: { onDone: () => void }) {
 function AuthPage({ onLogin }: { onLogin: (user: User) => void }) {
   const [tab, setTab] = useState<'login' | 'signup'>('login')
   const [name, setName] = useState(''); const [email, setEmail] = useState(''); const [password, setPassword] = useState('')
+  const [referralCode, setReferralCode] = useState(''); const [role, setRole] = useState('seeker')
   const [loading, setLoading] = useState(false); const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -103,6 +104,15 @@ function AuthPage({ onLogin }: { onLogin: (user: User) => void }) {
           {tab === 'signup' && <div className="form-group"><label>Full Name</label><input className="form-input" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} /></div>}
           <div className="form-group"><label>Email</label><input className="form-input" type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} /></div>
           <div className="form-group"><label>Password</label><input className="form-input" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} /></div>
+          {tab === 'signup' && <>
+            <div className="form-group"><label>I am a</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button type="button" className={`skill-tag ${role === 'seeker' ? 'skill-tag--selected' : ''}`} onClick={() => setRole('seeker')}>💼 Job Seeker</button>
+                <button type="button" className={`skill-tag ${role === 'recruiter' ? 'skill-tag--selected' : ''}`} onClick={() => setRole('recruiter')}>🏢 Recruiter</button>
+              </div>
+            </div>
+            <div className="form-group"><label>Referral Code (Optional)</label><input className="form-input" placeholder="Enter code" value={referralCode} onChange={e => setReferralCode(e.target.value.toUpperCase())} /></div>
+          </>}
           <button type="submit" className={`btn btn--primary mt-2 ${loading ? 'btn--disabled' : ''}`} disabled={loading}>{loading ? '⏳ Please wait...' : tab === 'login' ? '🔐 Login' : '🚀 Create Account'}</button>
         </form>
         <div className="or-divider"><span>OR</span></div>
@@ -251,7 +261,7 @@ function HomePage({ userName: _un, jobs, savedJobIds, onJobClick, onTabChange, o
 }
 
 // ═══ JOBS FEED ═══
-function JobsFeedPage({ jobs, savedJobIds, onJobClick, onSaveJob }: { jobs: any[], savedJobIds: string[], onJobClick: (job: any) => void, onSaveJob: (id: string) => void }) {
+function JobsFeedPage({ jobs, savedJobIds, onJobClick, onSaveJob, onTabChange }: { jobs: any[], savedJobIds: string[], onJobClick: (job: any) => void, onSaveJob: (id: string) => void, onTabChange: (tab: string) => void }) {
   const [activeCategory, setActiveCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [locFilter, setLocFilter] = useState('')
@@ -269,16 +279,18 @@ function JobsFeedPage({ jobs, savedJobIds, onJobClick, onSaveJob }: { jobs: any[
     return true
   })
 
-  // Sort
   const sorted = [...filtered].sort((a: any, b: any) => {
     if (sortBy === 'salary') return (b.salaryMin || 0) - (a.salaryMin || 0)
     if (sortBy === 'featured') return (b.featured ? 1 : 0) - (a.featured ? 1 : 0)
-    return 0 // newest = default Firestore order
+    return 0
   })
 
   return (
     <div className="page"><div className="page__content">
-      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>💼 Jobs</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
+        <h2 style={{ fontSize: '1.15rem', fontWeight: 700 }}>💼 Jobs</h2>
+        <button className="btn-hire" style={{ padding: '6px 14px', fontSize: '0.75rem' }} onClick={() => onTabChange('postjob')}>📝 Post Job</button>
+      </div>
 
       {/* ─── Search ─── */}
       <div className="search-bar">
@@ -1151,6 +1163,88 @@ function TalentPage() {
   )
 }
 
+// ═══ POST A JOB (Recruiter) ═══
+function PostJobPage({ onBack }: { onBack: () => void }) {
+  const [title, setTitle] = useState('')
+  const [company, setCompany] = useState('')
+  const [location, setLocation] = useState('')
+  const [salaryMin, setSalaryMin] = useState('')
+  const [salaryMax, setSalaryMax] = useState('')
+  const [workType, setWorkType] = useState('Remote')
+  const [category, setCategory] = useState('it')
+  const [description, setDescription] = useState('')
+  const [jobSkills, setJobSkills] = useState<string[]>([])
+  const [posting, setPosting] = useState(false)
+
+  const toggleJobSkill = (s: string) => {
+    setJobSkills(prev => prev.includes(s) ? prev.filter(x => x !== s) : prev.length < 8 ? [...prev, s] : prev)
+  }
+
+  const handlePost = async () => {
+    if (!auth.currentUser || !title || !company) return
+    setPosting(true)
+    try {
+      await postJob({
+        title, company, location, remote: workType, category,
+        salaryMin: parseInt(salaryMin) || 0, salaryMax: parseInt(salaryMax) || 0,
+        currency: '₹', skills: jobSkills, description,
+        postedBy: auth.currentUser.uid, logo: '🏢',
+      })
+      alert('✅ Job posted successfully! It will appear in the feed.')
+      onBack()
+    } catch { alert('❌ Failed to post. Try again.') }
+    setPosting(false)
+  }
+
+  return (
+    <div className="page"><div className="page__content slide-up">
+      <button onClick={onBack} className="btn-back">← Back</button>
+      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>📝 Post a Job</h2>
+
+      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '16px', border: '1px solid var(--border)' }}>
+        <div className="form-group"><label>Job Title *</label><input className="form-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Senior React Developer" /></div>
+        <div className="form-group"><label>Company Name *</label><input className="form-input" value={company} onChange={e => setCompany(e.target.value)} placeholder="e.g. TechCorp India" /></div>
+        <div className="form-group"><label>📍 Location</label><input className="form-input" value={location} onChange={e => setLocation(e.target.value)} placeholder="Mumbai, Bangalore, Delhi..." /></div>
+
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="form-group" style={{ flex: 1 }}><label>Min Salary (₹)</label><input className="form-input" type="number" value={salaryMin} onChange={e => setSalaryMin(e.target.value)} placeholder="25000" /></div>
+          <div className="form-group" style={{ flex: 1 }}><label>Max Salary (₹)</label><input className="form-input" type="number" value={salaryMax} onChange={e => setSalaryMax(e.target.value)} placeholder="50000" /></div>
+        </div>
+
+        <div className="form-group"><label>Work Type</label>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {['Remote', 'Hybrid', 'On-site', 'WFH'].map(t => (
+              <button key={t} type="button" className={`skill-tag ${workType === t ? 'skill-tag--selected' : ''}`} onClick={() => setWorkType(t)}>{t}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-group"><label>Category</label>
+          <select className="form-input" value={category} onChange={e => setCategory(e.target.value)}>
+            {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+          </select>
+        </div>
+
+        <div className="form-group"><label>Required Skills (max 8)</label>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {SKILLS.slice(0, 20).map(s => (
+              <button key={s} type="button" className={`skill-tag ${jobSkills.includes(s) ? 'skill-tag--selected' : ''}`} onClick={() => toggleJobSkill(s)} style={{ fontSize: '0.7rem' }}>{s}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-group"><label>Job Description</label>
+          <textarea className="form-input" rows={4} value={description} onChange={e => setDescription(e.target.value)} placeholder="Describe the role, responsibilities, requirements..." style={{ resize: 'vertical' }} />
+        </div>
+
+        <button className="btn btn--primary" style={{ width: '100%', marginTop: '8px' }} onClick={handlePost} disabled={!title || !company || posting}>
+          {posting ? '⏳ Posting...' : '📤 Post Job'}
+        </button>
+      </div>
+    </div></div>
+  )
+}
+
 // ═══ REFERRAL SYSTEM ═══
 function ReferralPage({ onBack, userProfile }: { onBack: () => void, userProfile: any }) {
   const referralCode = auth.currentUser?.uid?.slice(0, 8).toUpperCase() || 'HIREZZY'
@@ -1478,7 +1572,7 @@ export default function App() {
         </div>
       </div>
       {activeTab === 'home' && <HomePage userName={userName} jobs={activeJobs} savedJobIds={savedJobIds} onJobClick={setSelectedJob} onTabChange={setActiveTab} onSaveJob={handleSaveJob} userProfile={userProfile} />}
-      {activeTab === 'jobs' && <JobsFeedPage jobs={activeJobs} savedJobIds={savedJobIds} onJobClick={setSelectedJob} onSaveJob={handleSaveJob} />}
+      {activeTab === 'jobs' && <JobsFeedPage jobs={activeJobs} savedJobIds={savedJobIds} onJobClick={setSelectedJob} onSaveJob={handleSaveJob} onTabChange={setActiveTab} />}
       {activeTab === 'talent' && <TalentPage />}
       {activeTab === 'gigs' && <MarketplacePage userName={userName} />}
       {activeTab === 'wallet' && <WalletPage userProfile={userProfile} onCheckin={handleCheckin} />}
@@ -1489,6 +1583,7 @@ export default function App() {
       {activeTab === 'orders' && <MyOrdersPage onBack={() => setActiveTab('profile')} />}
       {activeTab === 'referral' && <ReferralPage onBack={() => setActiveTab('profile')} userProfile={userProfile} />}
       {activeTab === 'help' && <HelpPage onBack={() => setActiveTab('profile')} />}
+      {activeTab === 'postjob' && <PostJobPage onBack={() => setActiveTab('jobs')} />}
       {activeTab === 'profile' && <ProfilePage userName={userName} userEmail={userEmail} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} userProfile={userProfile} onTabChange={setActiveTab} />}
       <BottomNav active={activeTab} onChange={setActiveTab} />
       {toast && <div className={`toast toast--${toast.type}`}>{toast.msg}</div>}

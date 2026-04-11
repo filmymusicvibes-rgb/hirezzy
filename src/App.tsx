@@ -816,7 +816,8 @@ function ProfilePage({ userName, userEmail, onLogout, theme, toggleTheme, userPr
           { icon: '🎯', title: 'My Gigs', nav: 'gigs' },
           { icon: '📦', title: 'My Orders', nav: 'orders' },
           { icon: '🏆', title: 'Leaderboard', nav: 'leaderboard' },
-          { icon: '⚙️', title: 'Settings' }, { icon: '💬', title: 'Help & Support' },
+          { icon: '🎁', title: 'Refer & Earn', nav: 'referral' },
+          { icon: '⚙️', title: 'Settings' }, { icon: '💬', title: 'Help & Support', nav: 'help' },
         ].map((item: any, i) => (
           <div key={i} className="profile-menu__item fade-in" style={{ animationDelay: `${i * 0.04}s` }} onClick={() => { 
             if (item.nav) onTabChange(item.nav)
@@ -1107,6 +1108,125 @@ function TalentPage() {
   )
 }
 
+// ═══ REFERRAL SYSTEM ═══
+function ReferralPage({ onBack, userProfile }: { onBack: () => void, userProfile: any }) {
+  const referralCode = auth.currentUser?.uid?.slice(0, 8).toUpperCase() || 'HIREZZY'
+  const referralLink = `https://hirezzy.vercel.app/?ref=${referralCode}`
+  const [copied, setCopied] = useState(false)
+
+  const shareWhatsApp = () => {
+    const msg = `🔥 *Hirezzy — Find Work. Show Skills. Earn More!* 🚀\n\n💼 Jobs + Talent + Gigs + Growth\n📱 Best Career App for India!\n\n⭐ Use my referral code: *${referralCode}*\n\n👇 Join now:\n${referralLink}`
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
+  }
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(referralCode).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
+  }
+
+  return (
+    <div className="page"><div className="page__content slide-up">
+      <button onClick={onBack} className="btn-back">← Back</button>
+      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>🎁 Referral Program</h2>
+
+      {/* Referral Code Card */}
+      <div style={{ background: 'linear-gradient(135deg, var(--primary), #8B5CF6)', borderRadius: '20px', padding: '24px', color: '#fff', textAlign: 'center', marginBottom: '16px' }}>
+        <p style={{ fontSize: '0.8rem', opacity: 0.8, marginBottom: '8px' }}>Your Referral Code</p>
+        <div style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '4px', marginBottom: '12px' }}>{referralCode}</div>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+          <button onClick={copyCode} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '12px', padding: '10px 20px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}>
+            {copied ? '✅ Copied!' : '📋 Copy Code'}
+          </button>
+          <button onClick={shareWhatsApp} style={{ background: '#25D366', border: 'none', borderRadius: '12px', padding: '10px 20px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}>
+            📱 WhatsApp Share
+          </button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+        {[
+          { label: 'Invited', value: userProfile?.referralCount || 0, icon: '👥' },
+          { label: 'Joined', value: userProfile?.referralJoined || 0, icon: '✅' },
+          { label: 'Earned', value: `${(userProfile?.referralEarnings || 0)} HZC`, icon: '💰' },
+        ].map((s, i) => (
+          <div key={i} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '16px', textAlign: 'center', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '1.5rem' }}>{s.icon}</div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, margin: '4px 0' }}>{s.value}</div>
+            <div className="text-sm text-muted">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* How it works */}
+      <div style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '16px', border: '1px solid var(--border)' }}>
+        <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '12px' }}>🎯 How it Works</h3>
+        {[
+          { step: '1', title: 'Share your code', desc: 'Send to friends via WhatsApp, Telegram, etc.' },
+          { step: '2', title: 'Friend joins', desc: 'They sign up using your referral code' },
+          { step: '3', title: 'Both earn!', desc: `You get +${WALLET.referralBonus} HZC, friend gets +10 HZC` },
+        ].map((s, i) => (
+          <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0 }}>{s.step}</div>
+            <div><div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{s.title}</div><div className="text-sm text-muted">{s.desc}</div></div>
+          </div>
+        ))}
+      </div>
+    </div></div>
+  )
+}
+
+// ═══ HELP & SUPPORT ═══
+function HelpPage({ onBack }: { onBack: () => void }) {
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const faqs = [
+    { q: 'How do I apply for jobs?', a: 'Go to Jobs tab → click any job → tap "Apply Now" → fill the form and submit!' },
+    { q: 'How do I earn Hirezzy Coins?', a: 'Daily check-in (+5 HZC), apply to jobs (+2 HZC), refer friends (+25 HZC), complete gigs (real cash)!' },
+    { q: 'How to withdraw my earnings?', a: 'Go to Profile → Wallet → Withdrawal. Minimum withdrawal is ₹100 (1000 HZC = ₹100).' },
+    { q: 'How do I post a gig?', a: 'Go to Gigs tab → tap "Post a Gig" → fill title, price, description → Submit!' },
+    { q: 'What is the referral program?', a: `Share your referral code → friend joins → you earn +${WALLET.referralBonus} HZC! No limit on referrals.` },
+    { q: 'How to get verified badge?', a: 'Complete your profile 100% + pass a skill test. Verified badge costs ₹49 one-time.' },
+    { q: 'Is Hirezzy free to use?', a: 'Yes! Job seeking, applying, and basic features are 100% free. Premium features are optional.' },
+  ]
+  return (
+    <div className="page"><div className="page__content slide-up">
+      <button onClick={onBack} className="btn-back">← Back</button>
+      <h2 style={{ fontSize: '1.15rem', fontWeight: 700, padding: '12px 0' }}>💬 Help & Support</h2>
+
+      {/* Contact Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+        <a href={`https://wa.me/${APP.contact.whatsapp}`} target="_blank" rel="noreferrer" style={{ background: '#25D366', borderRadius: '16px', padding: '16px', textAlign: 'center', color: '#fff', textDecoration: 'none' }}>
+          <div style={{ fontSize: '1.5rem' }}>📱</div>
+          <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>WhatsApp</div>
+          <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>Quick Support</div>
+        </a>
+        <a href={`mailto:${APP.contact.email}`} style={{ background: 'var(--primary)', borderRadius: '16px', padding: '16px', textAlign: 'center', color: '#fff', textDecoration: 'none' }}>
+          <div style={{ fontSize: '1.5rem' }}>📧</div>
+          <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Email</div>
+          <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{APP.contact.email}</div>
+        </a>
+      </div>
+
+      {/* FAQ */}
+      <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '12px' }}>❓ FAQs</h3>
+      {faqs.map((faq, i) => (
+        <div key={i} style={{ background: 'var(--card-bg)', borderRadius: '14px', padding: '14px 16px', marginBottom: '8px', border: '1px solid var(--border)', cursor: 'pointer' }} onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{faq.q}</span>
+            <span style={{ fontSize: '0.9rem', transition: 'transform 0.2s', transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0)' }}>▾</span>
+          </div>
+          {openFaq === i && <p className="text-sm text-muted" style={{ marginTop: '8px', lineHeight: 1.5 }}>{faq.a}</p>}
+        </div>
+      ))}
+
+      {/* Footer */}
+      <div style={{ textAlign: 'center', padding: '20px 0' }}>
+        <p className="text-sm text-muted">Made with ❤️ by {APP.company.name}</p>
+        <p className="text-sm text-muted">{APP.name} v{APP.version}</p>
+      </div>
+    </div></div>
+  )
+}
+
 // ═══ MY ORDERS ═══
 function MyOrdersPage({ onBack }: { onBack: () => void }) {
   const [orders, setOrders] = useState<any[]>([])
@@ -1324,6 +1444,8 @@ export default function App() {
       {activeTab === 'saved' && <SavedJobsPage onBack={() => setActiveTab('profile')} jobs={activeJobs} savedJobIds={savedJobIds} onJobClick={setSelectedJob} onSaveJob={handleSaveJob} />}
       {activeTab === 'notifications' && <NotificationsPage onBack={() => setActiveTab('home')} />}
       {activeTab === 'orders' && <MyOrdersPage onBack={() => setActiveTab('profile')} />}
+      {activeTab === 'referral' && <ReferralPage onBack={() => setActiveTab('profile')} userProfile={userProfile} />}
+      {activeTab === 'help' && <HelpPage onBack={() => setActiveTab('profile')} />}
       {activeTab === 'profile' && <ProfilePage userName={userName} userEmail={userEmail} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} userProfile={userProfile} onTabChange={setActiveTab} />}
       <BottomNav active={activeTab} onChange={setActiveTab} />
       {toast && <div className={`toast toast--${toast.type}`}>{toast.msg}</div>}

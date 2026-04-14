@@ -2477,11 +2477,12 @@ function HomePage({ userName: _un, jobs, savedJobIds, onJobClick, onTabChange, o
       </div>
 
       {/* ─── FEATURE SHOWCASE ─── */}
-      <div className="features fade-in">
-        <div className="feature-card" onClick={() => onTabChange('jobs')}><div className="feature-card__icon">💼</div><div className="feature-card__title">Job Search</div><div className="feature-card__desc">Latest & Govt Jobs</div></div>
-        <div className="feature-card" onClick={() => onTabChange('creators')}><div className="feature-card__icon">🎬</div><div className="feature-card__title">Find Influencers</div><div className="feature-card__desc">Hire Creators</div></div>
-        <div className="feature-card" onClick={() => onTabChange('gigs')}><div className="feature-card__icon">🛒</div><div className="feature-card__title">Gig Marketplace</div><div className="feature-card__desc">Buy & Sell Services</div></div>
-        <div className="feature-card" onClick={() => onTabChange('wallet')}><div className="feature-card__icon">💰</div><div className="feature-card__title">Wallet & Earn</div><div className="feature-card__desc">Coins & Rewards</div></div>
+      <div className="features fade-in" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
+        <div className="feature-card" onClick={() => onTabChange('jobs')}><div className="feature-card__icon">💼</div><div className="feature-card__title">Jobs</div><div className="feature-card__desc">Latest & Govt</div></div>
+        <div className="feature-card" onClick={() => onTabChange('creators')}><div className="feature-card__icon">🎬</div><div className="feature-card__title">Creators</div><div className="feature-card__desc">Hire Talent</div></div>
+        <div className="feature-card" onClick={() => onTabChange('learn')}><div className="feature-card__icon">🎓</div><div className="feature-card__title">Learn</div><div className="feature-card__desc">Free Courses</div></div>
+        <div className="feature-card" onClick={() => onTabChange('gigs')}><div className="feature-card__icon">🛒</div><div className="feature-card__title">Gigs</div><div className="feature-card__desc">Services</div></div>
+        <div className="feature-card" onClick={() => onTabChange('wallet')}><div className="feature-card__icon">💰</div><div className="feature-card__title">Wallet</div><div className="feature-card__desc">Earn & Save</div></div>
       </div>
 
       <div className="section-divider" />
@@ -4468,8 +4469,8 @@ function BottomNav({ active, onChange }: { active: string, onChange: (tab: strin
   const tabs = [
     { id: 'home', icon: Icons.home, label: 'Home' },
     { id: 'jobs', icon: Icons.jobs, label: 'Jobs' },
-    { id: 'learn', icon: Icons.learn, label: 'Learn' },
     { id: 'creators', icon: Icons.creators, label: 'Creators' },
+    { id: 'gigs', icon: Icons.gigs, label: 'Gigs' },
     { id: 'profile', icon: Icons.profile, label: 'Profile' },
   ]
   return (

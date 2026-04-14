@@ -4528,7 +4528,12 @@ function CoursesPage({ onTabChange: _onTabChange }: { onTabChange: (tab: string)
           ))}
         </div>
 
-        {/* Curriculum End - No Enroll CTA */}
+        {/* Apply / Enroll CTA */}
+        <button className="btn btn--primary" style={{ background: c.price === 0 ? 'linear-gradient(135deg, #10B981, #059669)' : `linear-gradient(135deg, ${c.color}, ${c.color}CC)`, marginBottom: '20px', fontSize: '0.9rem', fontWeight: 800, padding: '14px' }} onClick={() => {
+          toast(c.price === 0 ? '🎉 Enrolled successfully! Check your email for course access.' : '💳 Redirecting to payment...', c.price === 0 ? 'success' : 'info')
+        }}>
+          {c.price === 0 ? '🚀 Enroll for Free' : `💳 Enroll for ${c.tag}`}
+        </button>
       </div></div>
     )
   }

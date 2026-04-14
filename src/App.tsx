@@ -4271,16 +4271,16 @@ function MyOrdersPage({ onBack }: { onBack: () => void }) {
 
 // ═══ COURSES / LEARN PAGE ═══
 const DEMO_COURSES = [
-  { id: 'c1', title: 'AI & ChatGPT Mastery', instructor: 'Ravi Kumar', avatar: 'R', color: '#6C5CE7', category: 'ai', duration: '45 days', lessons: 32, students: 12400, rating: 4.9, reviews: 847, price: 0, tag: 'FREE', tagColor: '#10B981', icon: '🤖', level: 'Beginner', desc: 'Master AI tools, prompt engineering, ChatGPT, Midjourney & automation. Build real AI projects from scratch.', curriculum: ['Introduction to AI', 'ChatGPT Prompt Engineering', 'AI Image Generation', 'AI for Business', 'Build AI Chatbot', 'Automation with AI', 'Final Project'] },
-  { id: 'c2', title: 'Full Stack Web Development', instructor: 'Sneha Reddy', avatar: 'S', color: '#0984E3', category: 'coding', duration: '90 days', lessons: 68, students: 8900, rating: 4.8, reviews: 562, price: 499, tag: '₹499', tagColor: '#F59E0B', icon: '💻', level: 'Beginner → Advanced', desc: 'HTML, CSS, JavaScript, React, Node.js, MongoDB. Deploy real projects on Vercel.', curriculum: ['HTML & CSS Basics', 'JavaScript Deep Dive', 'React.js', 'Node.js & Express', 'MongoDB & APIs', 'Full Stack Project', 'Deployment & Hosting'] },
-  { id: 'c3', title: 'Digital Marketing Pro', instructor: 'Priya Sharma', avatar: 'P', color: '#E17055', category: 'marketing', duration: '30 days', lessons: 24, students: 15600, rating: 4.7, reviews: 1023, price: 0, tag: 'FREE', tagColor: '#10B981', icon: '📢', level: 'Beginner', desc: 'SEO, Social Media Marketing, Google Ads, Facebook Ads, Email Marketing & Analytics.', curriculum: ['Marketing Fundamentals', 'SEO Mastery', 'Social Media Strategy', 'Google Ads', 'Facebook & Instagram Ads', 'Email Marketing', 'Analytics & ROI'] },
-  { id: 'c4', title: 'UI/UX Design with Figma', instructor: 'Arjun Patel', avatar: 'A', color: '#FF6B6B', category: 'design', duration: '40 days', lessons: 28, students: 6700, rating: 4.9, reviews: 389, price: 299, tag: '₹299', tagColor: '#F59E0B', icon: '🎨', level: 'Beginner', desc: 'Learn Figma, wireframing, prototyping, design systems & build stunning app UIs.', curriculum: ['Design Thinking', 'Figma Basics', 'Wireframing', 'UI Components', 'Prototyping', 'Design Systems', 'Portfolio Project'] },
-  { id: 'c5', title: 'Python & Data Science', instructor: 'Kiran Rao', avatar: 'K', color: '#00B894', category: 'coding', duration: '60 days', lessons: 45, students: 9200, rating: 4.8, reviews: 671, price: 0, tag: 'FREE', tagColor: '#10B981', icon: '🐍', level: 'Intermediate', desc: 'Python programming, Pandas, NumPy, Machine Learning basics, data visualization.', curriculum: ['Python Basics', 'Data Structures', 'Pandas & NumPy', 'Data Visualization', 'ML Foundations', 'Real-world Projects', 'Interview Prep'] },
-  { id: 'c6', title: 'Flutter App Development', instructor: 'Vikram Singh', avatar: 'V', color: '#00D2FF', category: 'coding', duration: '50 days', lessons: 38, students: 5400, rating: 4.7, reviews: 298, price: 399, tag: '₹399', tagColor: '#F59E0B', icon: '📱', level: 'Beginner → Advanced', desc: 'Build cross-platform iOS & Android apps with Flutter & Dart. Firebase integration.', curriculum: ['Dart Language', 'Flutter Widgets', 'State Management', 'Firebase Integration', 'API Integration', 'App Publishing', 'Portfolio App'] },
-  { id: 'c7', title: 'Spoken English in 30 Days', instructor: 'Meera Joshi', avatar: 'M', color: '#A29BFE', category: 'language', duration: '30 days', lessons: 30, students: 24500, rating: 4.6, reviews: 1876, price: 0, tag: 'FREE', tagColor: '#10B981', icon: '🗣️', level: 'Beginner', desc: 'Daily practice, vocabulary building, grammar, pronunciation & confidence building.', curriculum: ['Greetings & Basics', 'Daily Vocabulary', 'Grammar Essentials', 'Sentence Formation', 'Conversation Practice', 'Public Speaking', 'Mock Interviews'] },
-  { id: 'c8', title: 'Video Editing Masterclass', instructor: 'Deepak Nair', avatar: 'D', color: '#FD79A8', category: 'creative', duration: '35 days', lessons: 26, students: 7800, rating: 4.8, reviews: 445, price: 199, tag: '₹199', tagColor: '#F59E0B', icon: '🎬', level: 'Beginner', desc: 'CapCut, Premiere Pro, After Effects. Create reels, YouTube videos & cinematic edits.', curriculum: ['Editing Basics', 'CapCut Mobile', 'Premiere Pro', 'Color Grading', 'Motion Graphics', 'Transitions & Effects', 'YouTube Workflow'] },
-  { id: 'c9', title: 'Freelancing & Earning Online', instructor: 'Lakshmi Devi', avatar: 'L', color: '#FDCB6E', category: 'business', duration: '20 days', lessons: 18, students: 18300, rating: 4.7, reviews: 1345, price: 0, tag: 'FREE', tagColor: '#10B981', icon: '💰', level: 'Beginner', desc: 'Start freelancing on Fiverr, Upwork. Build portfolio, get clients & earn ₹50K+/mo.', curriculum: ['Freelance Platforms', 'Profile Optimization', 'Proposal Writing', 'Client Communication', 'Pricing Strategy', 'Portfolio Building', 'Scaling Your Business'] },
-  { id: 'c10', title: 'Instagram Growth & Monetization', instructor: 'Rahul Verma', avatar: 'R', color: '#E1306C', category: 'marketing', duration: '25 days', lessons: 20, students: 21000, rating: 4.8, reviews: 1567, price: 0, tag: 'FREE', tagColor: '#10B981', icon: '📸', level: 'Beginner', desc: 'Grow from 0 to 10K followers. Content strategy, reels, hashtags & brand deals.', curriculum: ['Instagram Algorithm', 'Content Strategy', 'Reel Creation', 'Hashtag Strategy', 'Engagement Hacks', 'Brand Collaborations', 'Monetization Guide'] },
+  { id: 'c1', title: 'AI & ChatGPT Mastery', instructor: 'Ravi Kumar', avatar: 'R', color: '#6C5CE7', category: 'ai', duration: '45 days', lessons: 32, students: 12400, rating: 4.9, reviews: 847, price: 0, tag: 'FREE', tagColor: '#10B981', icon: '🤖', level: 'Beginner', thumbnail: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=200&fit=crop', desc: 'Master AI tools, prompt engineering, ChatGPT, Midjourney & automation. Build real AI projects from scratch.', curriculum: ['Introduction to AI', 'ChatGPT Prompt Engineering', 'AI Image Generation', 'AI for Business', 'Build AI Chatbot', 'Automation with AI', 'Final Project'] },
+  { id: 'c2', title: 'Full Stack Web Development', instructor: 'Sneha Reddy', avatar: 'S', color: '#0984E3', category: 'coding', duration: '90 days', lessons: 68, students: 8900, rating: 4.8, reviews: 562, price: 499, tag: '₹499', tagColor: '#F59E0B', icon: '💻', level: 'Beginner → Advanced', thumbnail: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=400&h=200&fit=crop', desc: 'HTML, CSS, JavaScript, React, Node.js, MongoDB. Deploy real projects on Vercel.', curriculum: ['HTML & CSS Basics', 'JavaScript Deep Dive', 'React.js', 'Node.js & Express', 'MongoDB & APIs', 'Full Stack Project', 'Deployment & Hosting'] },
+  { id: 'c3', title: 'Digital Marketing Pro', instructor: 'Priya Sharma', avatar: 'P', color: '#E17055', category: 'marketing', duration: '30 days', lessons: 24, students: 15600, rating: 4.7, reviews: 1023, price: 0, tag: 'FREE', tagColor: '#10B981', icon: '📢', level: 'Beginner', thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=200&fit=crop', desc: 'SEO, Social Media Marketing, Google Ads, Facebook Ads, Email Marketing & Analytics.', curriculum: ['Marketing Fundamentals', 'SEO Mastery', 'Social Media Strategy', 'Google Ads', 'Facebook & Instagram Ads', 'Email Marketing', 'Analytics & ROI'] },
+  { id: 'c4', title: 'UI/UX Design with Figma', instructor: 'Arjun Patel', avatar: 'A', color: '#FF6B6B', category: 'design', duration: '40 days', lessons: 28, students: 6700, rating: 4.9, reviews: 389, price: 299, tag: '₹299', tagColor: '#F59E0B', icon: '🎨', level: 'Beginner', thumbnail: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=200&fit=crop', desc: 'Learn Figma, wireframing, prototyping, design systems & build stunning app UIs.', curriculum: ['Design Thinking', 'Figma Basics', 'Wireframing', 'UI Components', 'Prototyping', 'Design Systems', 'Portfolio Project'] },
+  { id: 'c5', title: 'Python & Data Science', instructor: 'Kiran Rao', avatar: 'K', color: '#00B894', category: 'coding', duration: '60 days', lessons: 45, students: 9200, rating: 4.8, reviews: 671, price: 0, tag: 'FREE', tagColor: '#10B981', icon: '🐍', level: 'Intermediate', thumbnail: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=400&h=200&fit=crop', desc: 'Python programming, Pandas, NumPy, Machine Learning basics, data visualization.', curriculum: ['Python Basics', 'Data Structures', 'Pandas & NumPy', 'Data Visualization', 'ML Foundations', 'Real-world Projects', 'Interview Prep'] },
+  { id: 'c6', title: 'Flutter App Development', instructor: 'Vikram Singh', avatar: 'V', color: '#00D2FF', category: 'coding', duration: '50 days', lessons: 38, students: 5400, rating: 4.7, reviews: 298, price: 399, tag: '₹399', tagColor: '#F59E0B', icon: '📱', level: 'Beginner → Advanced', thumbnail: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=200&fit=crop', desc: 'Build cross-platform iOS & Android apps with Flutter & Dart. Firebase integration.', curriculum: ['Dart Language', 'Flutter Widgets', 'State Management', 'Firebase Integration', 'API Integration', 'App Publishing', 'Portfolio App'] },
+  { id: 'c7', title: 'Spoken English in 30 Days', instructor: 'Meera Joshi', avatar: 'M', color: '#A29BFE', category: 'language', duration: '30 days', lessons: 30, students: 24500, rating: 4.6, reviews: 1876, price: 0, tag: 'FREE', tagColor: '#10B981', icon: '🗣️', level: 'Beginner', thumbnail: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=400&h=200&fit=crop', desc: 'Daily practice, vocabulary building, grammar, pronunciation & confidence building.', curriculum: ['Greetings & Basics', 'Daily Vocabulary', 'Grammar Essentials', 'Sentence Formation', 'Conversation Practice', 'Public Speaking', 'Mock Interviews'] },
+  { id: 'c8', title: 'Video Editing Masterclass', instructor: 'Deepak Nair', avatar: 'D', color: '#FD79A8', category: 'creative', duration: '35 days', lessons: 26, students: 7800, rating: 4.8, reviews: 445, price: 199, tag: '₹199', tagColor: '#F59E0B', icon: '🎬', level: 'Beginner', thumbnail: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400&h=200&fit=crop', desc: 'CapCut, Premiere Pro, After Effects. Create reels, YouTube videos & cinematic edits.', curriculum: ['Editing Basics', 'CapCut Mobile', 'Premiere Pro', 'Color Grading', 'Motion Graphics', 'Transitions & Effects', 'YouTube Workflow'] },
+  { id: 'c9', title: 'Freelancing & Earning Online', instructor: 'Lakshmi Devi', avatar: 'L', color: '#FDCB6E', category: 'business', duration: '20 days', lessons: 18, students: 18300, rating: 4.7, reviews: 1345, price: 0, tag: 'FREE', tagColor: '#10B981', icon: '💰', level: 'Beginner', thumbnail: 'https://images.unsplash.com/photo-1553729459-uj4kmecgqfoi?w=400&h=200&fit=crop', desc: 'Start freelancing on Fiverr, Upwork. Build portfolio, get clients & earn ₹50K+/mo.', curriculum: ['Freelance Platforms', 'Profile Optimization', 'Proposal Writing', 'Client Communication', 'Pricing Strategy', 'Portfolio Building', 'Scaling Your Business'] },
+  { id: 'c10', title: 'Instagram Growth & Monetization', instructor: 'Rahul Verma', avatar: 'R', color: '#E1306C', category: 'marketing', duration: '25 days', lessons: 20, students: 21000, rating: 4.8, reviews: 1567, price: 0, tag: 'FREE', tagColor: '#10B981', icon: '📸', level: 'Beginner', thumbnail: 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=400&h=200&fit=crop', desc: 'Grow from 0 to 10K followers. Content strategy, reels, hashtags & brand deals.', curriculum: ['Instagram Algorithm', 'Content Strategy', 'Reel Creation', 'Hashtag Strategy', 'Engagement Hacks', 'Brand Collaborations', 'Monetization Guide'] },
 ]
 
 const COURSE_CATEGORIES = [
@@ -4294,11 +4294,148 @@ const COURSE_CATEGORIES = [
   { id: 'language', name: 'Language', icon: '🗣️' },
 ]
 
+// ═══ POST A COURSE FORM ═══
+function PostCoursePage({ onBack }: { onBack: () => void }) {
+  const [title, setTitle] = useState('')
+  const [category, setCategory] = useState('coding')
+  const [thumbnail, setThumbnail] = useState('')
+  const [desc, setDesc] = useState('')
+  const [duration, setDuration] = useState('')
+  const [lessons, setLessons] = useState('')
+  const [level, setLevel] = useState('Beginner')
+  const [price, setPrice] = useState('')
+  const [curriculum, setCurriculum] = useState('')
+  const [courseLink, setCourseLink] = useState('')
+  const [instructorName, setInstructorName] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+
+  const handleSubmit = () => {
+    if (!title.trim() || !desc.trim() || !duration.trim()) {
+      toast('Please fill all required fields', 'error')
+      return
+    }
+    setSubmitting(true)
+    setTimeout(() => {
+      setSubmitting(false)
+      setSubmitted(true)
+      toast('🎉 Course submitted for review!', 'success')
+    }, 1500)
+  }
+
+  if (submitted) {
+    return (
+      <div className="page"><div className="page__content" style={{ padding: '16px' }}>
+        <div style={{ textAlign: 'center', padding: '60px 0' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '12px' }}>✅</div>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '8px' }}>Course Submitted!</h2>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: 1.6 }}>Your course is under review. It will be live within 24 hours after approval.</p>
+          <button className="btn btn--primary" style={{ maxWidth: '200px', margin: '0 auto' }} onClick={onBack}>🎓 Back to Courses</button>
+        </div>
+      </div></div>
+    )
+  }
+
+  return (
+    <div className="page"><div className="page__content" style={{ padding: '16px' }}>
+      <button style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0' }} onClick={onBack}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Back to Courses
+      </button>
+
+      <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>➕ Post a Course</h2>
+      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '16px' }}>Share your knowledge • Reach thousands of learners</p>
+
+      {/* Thumbnail Preview */}
+      <div style={{ background: 'var(--bg-card)', border: 'var(--card-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: '16px' }}>
+        <div style={{ height: '140px', background: thumbnail ? `url(${thumbnail}) center/cover no-repeat` : 'linear-gradient(135deg, #6C5CE720, #0984E320)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+          {!thumbnail && <span style={{ fontSize: '2.5rem', opacity: 0.3 }}>🖼️</span>}
+          {thumbnail && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent)' }} />}
+          <span style={{ position: 'absolute', bottom: '8px', right: '8px', padding: '3px 10px', borderRadius: '20px', fontSize: '0.6rem', fontWeight: 700, background: 'rgba(0,0,0,0.5)', color: 'white', backdropFilter: 'blur(8px)' }}>📷 Thumbnail Preview</span>
+        </div>
+      </div>
+
+      {/* Form */}
+      <div className="form-group">
+        <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>Course Title *</label>
+        <input className="form-input" placeholder="e.g. AI & ChatGPT Mastery" value={title} onChange={e => setTitle(e.target.value)} />
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="form-group" style={{ flex: 1 }}>
+          <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>Category *</label>
+          <select className="form-input" value={category} onChange={e => setCategory(e.target.value)}>
+            {COURSE_CATEGORIES.filter(c => c.id !== 'all').map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+          </select>
+        </div>
+        <div className="form-group" style={{ flex: 1 }}>
+          <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>Level *</label>
+          <select className="form-input" value={level} onChange={e => setLevel(e.target.value)}>
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+            <option>Beginner → Advanced</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>🖼️ Thumbnail Image URL</label>
+        <input className="form-input" placeholder="https://your-image-url.jpg" value={thumbnail} onChange={e => setThumbnail(e.target.value)} />
+        <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Upload to imgur.com or use any image URL for your course banner</span>
+      </div>
+
+      <div className="form-group">
+        <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>Description *</label>
+        <textarea className="form-input" rows={3} placeholder="What will students learn? Key highlights..." value={desc} onChange={e => setDesc(e.target.value)} style={{ resize: 'vertical', minHeight: '70px' }} />
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="form-group" style={{ flex: 1 }}>
+          <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>Duration *</label>
+          <input className="form-input" placeholder="e.g. 45 days" value={duration} onChange={e => setDuration(e.target.value)} />
+        </div>
+        <div className="form-group" style={{ flex: 1 }}>
+          <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>Total Lessons</label>
+          <input className="form-input" type="number" placeholder="e.g. 32" value={lessons} onChange={e => setLessons(e.target.value)} />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="form-group" style={{ flex: 1 }}>
+          <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>Price (₹)</label>
+          <input className="form-input" type="number" placeholder="0 = Free" value={price} onChange={e => setPrice(e.target.value)} />
+        </div>
+        <div className="form-group" style={{ flex: 1 }}>
+          <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>Instructor Name</label>
+          <input className="form-input" placeholder="Your name" value={instructorName} onChange={e => setInstructorName(e.target.value)} />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>📋 Curriculum (one topic per line)</label>
+        <textarea className="form-input" rows={5} placeholder={"Introduction to AI\nPrompt Engineering\nBuild AI Chatbot\nFinal Project"} value={curriculum} onChange={e => setCurriculum(e.target.value)} style={{ resize: 'vertical', minHeight: '100px' }} />
+      </div>
+
+      <div className="form-group">
+        <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>🔗 Course / Enrollment Link</label>
+        <input className="form-input" placeholder="https://your-course-page.com or WhatsApp link" value={courseLink} onChange={e => setCourseLink(e.target.value)} />
+        <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Where should students go to enroll? Website, WhatsApp, or Telegram link</span>
+      </div>
+
+      <button className="btn btn--primary" style={{ background: 'linear-gradient(135deg, #6C5CE7, #8B5CF6)', marginBottom: '20px' }} disabled={submitting} onClick={handleSubmit}>
+        {submitting ? '⏳ Submitting...' : '🚀 Submit Course for Review'}
+      </button>
+    </div></div>
+  )
+}
+
 function CoursesPage({ onTabChange: _onTabChange }: { onTabChange: (tab: string) => void }) {
   const [searchQ, setSearchQ] = useState('')
   const [catFilter, setCatFilter] = useState('all')
   const [priceFilter, setPriceFilter] = useState<'all'|'free'|'paid'>('all')
   const [selectedCourse, setSelectedCourse] = useState<any>(null)
+  const [showPostForm, setShowPostForm] = useState(false)
 
   const filtered = DEMO_COURSES.filter(c => {
     if (catFilter !== 'all' && c.category !== catFilter) return false
@@ -4313,6 +4450,11 @@ function CoursesPage({ onTabChange: _onTabChange }: { onTabChange: (tab: string)
 
   const freeCount = DEMO_COURSES.filter(c => c.price === 0).length
   const totalStudents = DEMO_COURSES.reduce((s, c) => s + c.students, 0)
+
+  // Post Course Form
+  if (showPostForm) {
+    return <PostCoursePage onBack={() => setShowPostForm(false)} />
+  }
 
   // Course Detail View
   if (selectedCourse) {
@@ -4384,8 +4526,13 @@ function CoursesPage({ onTabChange: _onTabChange }: { onTabChange: (tab: string)
     <div className="page"><div className="page__content">
       {/* Header */}
       <div style={{ padding: '12px 0 8px' }}>
-        <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>🎓 Learn & Upskill</h2>
-        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{freeCount} free courses • {(totalStudents/1000).toFixed(0)}K+ students enrolled</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>🎓 Learn & Upskill</h2>
+            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{freeCount} free courses • {(totalStudents/1000).toFixed(0)}K+ students enrolled</p>
+          </div>
+          <button onClick={() => setShowPostForm(true)} style={{ padding: '8px 14px', borderRadius: '12px', background: 'linear-gradient(135deg, #6C5CE7, #8B5CF6)', color: 'white', border: 'none', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(108,92,231,0.3)' }}>➕ Post Course</button>
+        </div>
       </div>
 
       {/* Search */}
@@ -4433,15 +4580,20 @@ function CoursesPage({ onTabChange: _onTabChange }: { onTabChange: (tab: string)
           {/* Subtle gradient bg */}
           <div style={{ position: 'absolute', top: 0, right: 0, width: '120px', height: '120px', background: `radial-gradient(circle, ${c.color}08, transparent)`, borderRadius: '0 var(--radius-lg) 0 50%' }} />
 
-          {/* Top: Icon + Info + Tag */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', position: 'relative' }}>
-            <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: `linear-gradient(135deg, ${c.color}20, ${c.color}08)`, border: `1px solid ${c.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>{c.icon}</div>
+          {/* Thumbnail Banner */}
+          <div style={{ height: '110px', margin: '-16px -16px 12px -16px', background: (c as any).thumbnail ? `url(${(c as any).thumbnail}) center/cover no-repeat` : `linear-gradient(135deg, ${c.color}30, ${c.color}10)`, position: 'relative', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0' }}>
+            {!(c as any).thumbnail && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', opacity: 0.2 }}>{c.icon}</div>}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--bg-card) 5%, transparent 60%)' }} />
+            <span style={{ position: 'absolute', top: '8px', right: '8px', padding: '2px 8px', borderRadius: '20px', fontSize: '0.6rem', fontWeight: 800, background: c.tagColor + '20', color: c.tagColor, border: `1px solid ${c.tagColor}30`, backdropFilter: 'blur(8px)' }}>{c.tag}</span>
+            <span style={{ position: 'absolute', top: '8px', left: '8px', padding: '2px 8px', borderRadius: '20px', fontSize: '0.55rem', fontWeight: 600, background: 'rgba(0,0,0,0.4)', color: 'white', backdropFilter: 'blur(8px)' }}>{c.level}</span>
+          </div>
+
+          {/* Title + Info */}
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', position: 'relative' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: `linear-gradient(135deg, ${c.color}, ${c.color}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.8rem', fontWeight: 800, flexShrink: 0, marginTop: '-4px', border: '2px solid var(--bg-card)' }}>{c.avatar}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                <h3 style={{ fontSize: '0.88rem', fontWeight: 800, lineHeight: 1.3, marginBottom: '3px' }}>{c.title}</h3>
-                <span style={{ padding: '2px 8px', borderRadius: '20px', fontSize: '0.6rem', fontWeight: 800, background: c.tagColor + '15', color: c.tagColor, border: `1px solid ${c.tagColor}25`, flexShrink: 0, whiteSpace: 'nowrap' }}>{c.tag}</span>
-              </div>
-              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '6px' }}>by {c.instructor} • {c.level}</p>
+              <h3 style={{ fontSize: '0.88rem', fontWeight: 800, lineHeight: 1.3, marginBottom: '3px' }}>{c.title}</h3>
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px' }}>by {c.instructor} • {c.level}</p>
             </div>
           </div>
 

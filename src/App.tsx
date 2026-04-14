@@ -4294,7 +4294,7 @@ const COURSE_CATEGORIES = [
   { id: 'language', name: 'Language', icon: '🗣️' },
 ]
 
-function CoursesPage({ onTabChange }: { onTabChange: (tab: string) => void }) {
+function CoursesPage({ onTabChange: _onTabChange }: { onTabChange: (tab: string) => void }) {
   const [searchQ, setSearchQ] = useState('')
   const [catFilter, setCatFilter] = useState('all')
   const [priceFilter, setPriceFilter] = useState<'all'|'free'|'paid'>('all')

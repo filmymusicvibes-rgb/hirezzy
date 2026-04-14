@@ -4380,9 +4380,21 @@ function PostCoursePage({ onBack }: { onBack: () => void }) {
       </div>
 
       <div className="form-group">
-        <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>🖼️ Thumbnail Image URL</label>
-        <input className="form-input" placeholder="https://your-image-url.jpg" value={thumbnail} onChange={e => setThumbnail(e.target.value)} />
-        <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Upload to imgur.com or use any image URL for your course banner</span>
+        <label style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>🖼️ Course Thumbnail</label>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <label style={{ flex: 1, padding: '10px 14px', background: 'var(--bg-card)', border: 'var(--card-border)', borderRadius: 'var(--radius)', cursor: 'pointer', textAlign: 'center', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+            📷 {thumbnail ? 'Change Image' : 'Upload Image'}
+            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
+              const file = e.target.files?.[0]
+              if (file) {
+                const reader = new FileReader()
+                reader.onload = (ev) => setThumbnail(ev.target?.result as string)
+                reader.readAsDataURL(file)
+              }
+            }} />
+          </label>
+        </div>
+        <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>🎨 Canva recommended size: 1280 × 720 px (YouTube Thumbnail)</span>
       </div>
 
       <div className="form-group">
@@ -4423,7 +4435,7 @@ function PostCoursePage({ onBack }: { onBack: () => void }) {
         <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Where should students go to enroll? Website, WhatsApp, or Telegram link</span>
       </div>
 
-      <button className="btn btn--primary" style={{ background: 'linear-gradient(135deg, #6C5CE7, #8B5CF6)', marginBottom: '20px' }} disabled={submitting} onClick={handleSubmit}>
+      <button className="btn btn--primary" style={{ marginBottom: '20px' }} disabled={submitting} onClick={handleSubmit}>
         {submitting ? '⏳ Submitting...' : '🚀 Submit Course for Review'}
       </button>
     </div></div>
@@ -4466,21 +4478,25 @@ function CoursesPage({ onTabChange: _onTabChange }: { onTabChange: (tab: string)
           Back to Courses
         </button>
 
-        {/* Hero */}
-        <div style={{ background: `linear-gradient(135deg, ${c.color}15, ${c.color}08)`, border: `1px solid ${c.color}25`, borderRadius: 'var(--radius-lg)', padding: '24px 20px', marginBottom: '16px', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: '-20px', right: '-10px', fontSize: '5rem', opacity: 0.08 }}>{c.icon}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800, background: c.tagColor + '18', color: c.tagColor, border: `1px solid ${c.tagColor}30` }}>{c.tag}</span>
-            <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 600, background: 'var(--bg-card)', border: 'var(--card-border)' }}>{c.level}</span>
+        {/* Hero with Thumbnail */}
+        <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: '16px', border: 'var(--card-border)' }}>
+          <div style={{ height: '180px', background: (c as any).thumbnail ? `url(${(c as any).thumbnail}) center/cover no-repeat` : `linear-gradient(135deg, ${c.color}30, ${c.color}10)`, position: 'relative' }}>
+            {!(c as any).thumbnail && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', opacity: 0.15 }}>{c.icon}</div>}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--bg-card), transparent 70%)' }} />
+            <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', gap: '6px' }}>
+              <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800, background: c.tagColor + '20', color: c.tagColor, border: `1px solid ${c.tagColor}30`, backdropFilter: 'blur(8px)' }}>{c.tag}</span>
+              <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 600, background: 'rgba(0,0,0,0.4)', color: 'white', backdropFilter: 'blur(8px)' }}>{c.level}</span>
+            </div>
           </div>
-          <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>{c.icon}</div>
-          <h1 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '6px', lineHeight: 1.3 }}>{c.title}</h1>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.5 }}>{c.desc}</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `linear-gradient(135deg, ${c.color}, ${c.color}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.75rem', fontWeight: 800 }}>{c.avatar}</div>
-            <div>
-              <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>{c.instructor}</div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Instructor</div>
+          <div style={{ padding: '16px 20px', background: 'var(--bg-card)' }}>
+            <h1 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '6px', lineHeight: 1.3 }}>{c.title}</h1>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.5 }}>{c.desc}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `linear-gradient(135deg, ${c.color}, ${c.color}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.75rem', fontWeight: 800 }}>{c.avatar}</div>
+              <div>
+                <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>{c.instructor}</div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Instructor</div>
+              </div>
             </div>
           </div>
         </div>
@@ -4512,12 +4528,7 @@ function CoursesPage({ onTabChange: _onTabChange }: { onTabChange: (tab: string)
           ))}
         </div>
 
-        {/* CTA */}
-        <button className="btn btn--primary" style={{ background: c.price === 0 ? 'linear-gradient(135deg, #10B981, #059669)' : `linear-gradient(135deg, ${c.color}, ${c.color}CC)`, marginBottom: '20px' }} onClick={() => {
-          toast(c.price === 0 ? '🎉 Enrolled successfully! Check your email for course access.' : '💳 Redirecting to payment...', c.price === 0 ? 'success' : 'info')
-        }}>
-          {c.price === 0 ? '🚀 Enroll for Free' : `💳 Enroll for ${c.tag}`}
-        </button>
+        {/* Curriculum End - No Enroll CTA */}
       </div></div>
     )
   }
@@ -4531,7 +4542,7 @@ function CoursesPage({ onTabChange: _onTabChange }: { onTabChange: (tab: string)
             <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>🎓 Learn & Upskill</h2>
             <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{freeCount} free courses • {(totalStudents/1000).toFixed(0)}K+ students enrolled</p>
           </div>
-          <button onClick={() => setShowPostForm(true)} style={{ padding: '8px 14px', borderRadius: '12px', background: 'linear-gradient(135deg, #6C5CE7, #8B5CF6)', color: 'white', border: 'none', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(108,92,231,0.3)' }}>➕ Post Course</button>
+          <button onClick={() => setShowPostForm(true)} style={{ padding: '8px 14px', borderRadius: '12px', background: 'linear-gradient(135deg, #0984E3, #6C5CE7)', color: 'white', border: 'none', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(9,132,227,0.3)' }}>✏️ Post Course</button>
         </div>
       </div>
 

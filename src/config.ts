@@ -5,9 +5,9 @@
 
 export const APP = {
   name: 'Hirezzy',
-  tagline: 'Hiring Made Easy',
-  description: 'Find your dream job — Govt, Private, IT, Remote, Freelance & more. All in one app.',
-  version: '1.0.0',
+  tagline: 'Find Work. Show Skills. Earn More.',
+  description: 'Jobs + Freelance + Influencers + Earning — India\'s first unified work ecosystem.',
+  version: '2.0.0',
   website: 'hirezzy.com',
   contact: {
     email: 'support@hirezzy.com',
@@ -19,6 +19,64 @@ export const APP = {
     website: 'sofviz.live',
   },
 }
+
+// ═══ USER ROLES (Multi-select) ═══
+export const USER_ROLES = [
+  { id: 'job_seeker', name: 'Find Jobs', icon: '💼', desc: 'Search & apply to jobs', color: '#6C5CE7' },
+  { id: 'freelancer', name: 'Freelance', icon: '🧑‍💻', desc: 'Offer skills & services', color: '#00D2FF' },
+  { id: 'influencer', name: 'Creator / Influencer', icon: '🎬', desc: 'Get brand deals & promotions', color: '#E17055' },
+  { id: 'recruiter', name: 'Hire Talent', icon: '🏢', desc: 'Post jobs & find people', color: '#00B894' },
+]
+
+// ═══ INFLUENCER NICHES ═══
+export const INFLUENCER_NICHES = [
+  { id: 'tech', name: 'Tech & Gadgets', icon: '💻', color: '#0984E3' },
+  { id: 'fashion', name: 'Fashion & Style', icon: '👗', color: '#E17055' },
+  { id: 'food', name: 'Food & Cooking', icon: '🍕', color: '#FDCB6E' },
+  { id: 'gaming', name: 'Gaming', icon: '🎮', color: '#6C5CE7' },
+  { id: 'fitness', name: 'Fitness & Health', icon: '💪', color: '#00B894' },
+  { id: 'travel', name: 'Travel & Vlog', icon: '✈️', color: '#00D2FF' },
+  { id: 'beauty', name: 'Beauty & Skincare', icon: '💄', color: '#FD79A8' },
+  { id: 'lifestyle', name: 'Lifestyle', icon: '🌟', color: '#A29BFE' },
+  { id: 'comedy', name: 'Comedy & Memes', icon: '😂', color: '#FF7675' },
+  { id: 'education', name: 'Education', icon: '📚', color: '#74B9FF' },
+  { id: 'business', name: 'Business & Finance', icon: '📈', color: '#55EFC4' },
+  { id: 'music', name: 'Music & Dance', icon: '🎵', color: '#FAB1A0' },
+]
+
+// ═══ INFLUENCER PLATFORMS ═══
+export const INFLUENCER_PLATFORMS = [
+  { id: 'instagram', name: 'Instagram', icon: '📸', color: '#E1306C' },
+  { id: 'youtube', name: 'YouTube', icon: '▶️', color: '#FF0000' },
+  { id: 'twitter', name: 'X / Twitter', icon: '🐦', color: '#1DA1F2' },
+]
+
+// ═══ LANGUAGES ═══
+export const LANGUAGES = [
+  { id: 'telugu', name: 'Telugu', flag: '🟢', color: '#00B894' },
+  { id: 'hindi', name: 'Hindi', flag: '🟡', color: '#FDCB6E' },
+  { id: 'english', name: 'English', flag: '🔵', color: '#0984E3' },
+  { id: 'tamil', name: 'Tamil', flag: '🟠', color: '#E17055' },
+  { id: 'kannada', name: 'Kannada', flag: '🟣', color: '#6C5CE7' },
+  { id: 'malayalam', name: 'Malayalam', flag: '🔴', color: '#FF7675' },
+  { id: 'bengali', name: 'Bengali', flag: '⚪', color: '#636E72' },
+  { id: 'marathi', name: 'Marathi', flag: '🟤', color: '#A29BFE' },
+]
+
+// ═══ INDIAN CITIES ═══
+export const INDIAN_CITIES = [
+  'Hyderabad', 'Vizag', 'Bangalore', 'Mumbai', 'Delhi', 'Chennai',
+  'Pune', 'Kolkata', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Kochi',
+]
+
+// ═══ BUDGET RANGES ═══
+export const BUDGET_RANGES = [
+  { id: 'micro', label: '₹500 – ₹1K', min: 500, max: 1000 },
+  { id: 'small', label: '₹1K – ₹5K', min: 1000, max: 5000 },
+  { id: 'medium', label: '₹5K – ₹10K', min: 5000, max: 10000 },
+  { id: 'large', label: '₹10K – ₹25K', min: 10000, max: 25000 },
+  { id: 'premium', label: '₹25K+', min: 25000, max: 999999 },
+]
 
 // ═══ JOB CATEGORIES ═══
 export const CATEGORIES = [
@@ -109,3 +167,21 @@ export const WALLET = {
   featuredProfilePrice: 99, // per month
   verifiedBadgePrice: 49,
 }
+
+// ═══ CAMPAIGN STATUS ═══
+export const CAMPAIGN_STATUS: Record<string, { label: string, color: string, bg: string, icon: string }> = {
+  pending: { label: 'Pending', color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', icon: '⏳' },
+  accepted: { label: 'Accepted', color: '#10B981', bg: 'rgba(16,185,129,0.1)', icon: '✅' },
+  in_progress: { label: 'In Progress', color: '#0984E3', bg: 'rgba(9,132,227,0.1)', icon: '🔄' },
+  completed: { label: 'Completed', color: '#6C5CE7', bg: 'rgba(108,92,231,0.1)', icon: '🎉' },
+  cancelled: { label: 'Cancelled', color: '#EF4444', bg: 'rgba(239,68,68,0.1)', icon: '❌' },
+}
+
+// ═══ CONTENT TYPES ═══
+export const CONTENT_TYPES = [
+  { id: 'post', name: 'Instagram Post', icon: '📸', desc: 'Static image post' },
+  { id: 'reel', name: 'Instagram Reel', icon: '🎬', desc: 'Short video (15-90s)' },
+  { id: 'story', name: 'Instagram Story', icon: '📱', desc: '24hr story post' },
+  { id: 'youtube', name: 'YouTube Video', icon: '▶️', desc: 'Full YouTube video' },
+  { id: 'collab', name: 'Brand Collab Post', icon: '🤝', desc: 'Collaborative content' },
+]

@@ -83,13 +83,28 @@ async function createUserDoc(user: User, name: string) {
     email: user.email,
     phone: '',
     avatar: user.photoURL || '',
-    role: 'seeker', // seeker | recruiter | admin
+    role: 'seeker', // legacy field kept for compat
+    roles: ['job_seeker'], // multi-role array
+    onboardingDone: false,
     skills: [],
     city: '',
     resumeUrl: '',
     availability: 'available', // available | busy | offline
     bio: '',
     rate: '',
+    // ═══ Influencer Fields ═══
+    instagramUrl: '',
+    youtubeUrl: '',
+    twitterUrl: '',
+    followers: 0,
+    engagementRate: 0,
+    niche: [],
+    languages: [],
+    ratePerPost: 0,
+    ratePerReel: 0,
+    ratePerStory: 0,
+    platform: 'instagram', // primary platform
+    // ═══ Common Fields ═══
     savedJobs: [],
     walletBalance: 0,
     coins: 0,
@@ -234,6 +249,51 @@ export async function searchTalent(skill?: string) {
     )
   }
   return results
+}
+
+// ═══ INFLUENCER SEARCH ═══
+
+export async function searchInfluencers(filters?: {
+  language?: string, city?: string, niche?: string, budgetMin?: number, budgetMax?: number
+}) {
+  // Get all users who have 'influencer' in roles array
+  const q = query(collection(db, 'users'), where('roles', 'array-contains', 'influencer'), limit(50))
+  const snap = await getDocs(q)
+  let results = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+
+  if (filters) {
+    if (filters.language) {
+      results = results.filter((u: any) =>
+        (u.languages || []).some((l: string) => l.toLowerCase() === filters.language!.toLowerCase())
+      )
+    }
+    if (filters.city) {
+      results = results.filter((u: any) =>
+        (u.city || '').toLowerCase().includes(filters.city!.toLowerCase())
+      )
+    }
+    if (filters.niche) {
+      results = results.filter((u: any) =>
+        (u.niche || []).some((n: string) => n.toLowerCase() === filters.niche!.toLowerCase())
+      )
+    }
+    if (filters.budgetMin !== undefined && filters.budgetMax !== undefined) {
+      results = results.filter((u: any) => {
+        const rate = u.ratePerPost || u.ratePerReel || 0
+        return rate >= filters.budgetMin! && rate <= filters.budgetMax!
+      })
+    }
+  }
+  return results
+}
+
+// ═══ ONBOARDING ═══
+
+export async function updateOnboardingComplete(uid: string, roles: string[]) {
+  await updateDoc(doc(db, 'users', uid), {
+    roles: roles,
+    onboardingDone: true,
+  })
 }
 
 // ═══ WALLET ═══
@@ -418,6 +478,206 @@ export async function sendOffer(fromUserId: string, toUserId: string, offerData:
     body: `You received an offer: ${offerData.title}`,
   })
   return docRef.id
+}
+
+// ═══ REVIEWS ═══
+
+export async function addReview(influencerId: string, review: {
+  rating: number, text: string, reviewerName: string, reviewerId: string, campaignType?: string
+}) {
+  await addDoc(collection(db, 'reviews'), {
+    influencerId,
+    ...review,
+    createdAt: serverTimestamp(),
+  })
+  // Update influencer's average rating
+  const reviews = await getReviews(influencerId)
+  const avgRating = reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / Math.max(reviews.length, 1)
+  // Try to update user doc with new rating
+  try {
+    await updateDoc(doc(db, 'users', influencerId), {
+      rating: Math.round(avgRating * 10) / 10,
+      reviewCount: reviews.length,
+    })
+  } catch {}
+}
+
+export async function getReviews(influencerId: string) {
+  const q = query(collection(db, 'reviews'), where('influencerId', '==', influencerId), orderBy('createdAt', 'desc'), limit(20))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+// ═══ CAMPAIGNS (HIRE REQUESTS) ═══
+
+export async function createCampaign(campaign: {
+  brandId: string, brandName: string, influencerId: string, influencerName: string,
+  contentType: string, budget: number, brief: string, influencerAvatar?: string, influencerColor?: string
+}) {
+  const docRef = await addDoc(collection(db, 'campaigns'), {
+    ...campaign,
+    status: 'pending',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  })
+  // Notify influencer
+  try {
+    await addNotification(campaign.influencerId, {
+      type: 'campaign',
+      title: '💼 New Hire Request!',
+      body: `${campaign.brandName} wants to hire you for a ${campaign.contentType}`,
+      icon: '🎬',
+    })
+  } catch {}
+  return docRef.id
+}
+
+export async function getUserCampaigns(userId: string) {
+  const q = query(collection(db, 'campaigns'), where('brandId', '==', userId), orderBy('createdAt', 'desc'), limit(30))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+export async function updateCampaignStatus(campaignId: string, status: string) {
+  await updateDoc(doc(db, 'campaigns', campaignId), {
+    status,
+    updatedAt: serverTimestamp(),
+  })
+}
+
+// ═══ CHAT SYSTEM ═══
+
+export async function getOrCreateChat(userId: string, otherUserId: string, otherUserName: string, otherUserAvatar?: string, otherUserColor?: string) {
+  // Check if chat already exists
+  const q = query(collection(db, 'chats'), where('participants', 'array-contains', userId), limit(50))
+  const snap = await getDocs(q)
+  const existing = snap.docs.find(d => {
+    const data = d.data()
+    return data.participants?.includes(otherUserId)
+  })
+  if (existing) return existing.id
+
+  // Create new chat
+  const chatRef = await addDoc(collection(db, 'chats'), {
+    participants: [userId, otherUserId],
+    participantNames: { [userId]: 'You', [otherUserId]: otherUserName },
+    participantAvatars: { [otherUserId]: otherUserAvatar || '?' },
+    participantColors: { [otherUserId]: otherUserColor || '#6C5CE7' },
+    lastMessage: '',
+    lastMessageAt: serverTimestamp(),
+    createdAt: serverTimestamp(),
+  })
+  return chatRef.id
+}
+
+export async function sendChatMessage(chatId: string, senderId: string, text: string) {
+  await addDoc(collection(db, 'chats', chatId, 'messages'), {
+    senderId,
+    text,
+    createdAt: serverTimestamp(),
+  })
+  // Update last message on chat doc
+  await updateDoc(doc(db, 'chats', chatId), {
+    lastMessage: text.substring(0, 100),
+    lastMessageAt: serverTimestamp(),
+  })
+}
+
+export async function getUserChats(userId: string) {
+  const q = query(collection(db, 'chats'), where('participants', 'array-contains', userId), orderBy('lastMessageAt', 'desc'), limit(30))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+export function listenToMessages(chatId: string, callback: (messages: any[]) => void) {
+  const q = query(collection(db, 'chats', chatId, 'messages'), orderBy('createdAt', 'asc'), limit(100))
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+  })
+}
+
+// ═══ PORTFOLIO SYSTEM ═══
+
+export async function savePortfolioItem(userId: string, item: { title: string, imageUrl: string, type: string, description: string, brandName?: string }) {
+  return addDoc(collection(db, 'portfolios'), {
+    userId,
+    ...item,
+    createdAt: serverTimestamp(),
+  })
+}
+
+export async function getPortfolio(userId: string) {
+  const q = query(collection(db, 'portfolios'), where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(20))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+// ═══ PAYMENT SYSTEM ═══
+
+export async function createPayment(data: { brandId: string, creatorId: string, creatorName: string, amount: number, campaignId?: string, description: string }) {
+  return addDoc(collection(db, 'payments'), {
+    ...data,
+    status: 'pending',
+    razorpayId: '',
+    createdAt: serverTimestamp(),
+  })
+}
+
+export async function getUserPayments(userId: string) {
+  const q = query(collection(db, 'payments'), where('brandId', '==', userId), orderBy('createdAt', 'desc'), limit(30))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+export async function updatePaymentStatus(paymentId: string, status: string, razorpayId?: string) {
+  await updateDoc(doc(db, 'payments', paymentId), {
+    status,
+    ...(razorpayId ? { razorpayId } : {}),
+    updatedAt: serverTimestamp(),
+  })
+}
+
+// ═══ ADMIN SYSTEM ═══
+
+export async function getAllUsers(limitCount = 50) {
+  const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(limitCount))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+export async function getAdminStats() {
+  const [usersSnap, campaignsSnap, paymentsSnap] = await Promise.all([
+    getDocs(query(collection(db, 'users'), limit(500))),
+    getDocs(query(collection(db, 'campaigns'), limit(500))),
+    getDocs(query(collection(db, 'payments'), limit(500))),
+  ])
+  const creators = usersSnap.docs.filter(d => d.data().role === 'creator' || (d.data().roles || []).includes('influencer'))
+  return {
+    totalUsers: usersSnap.size,
+    totalCreators: creators.length,
+    totalCampaigns: campaignsSnap.size,
+    totalPayments: paymentsSnap.size,
+  }
+}
+
+export async function verifyCreator(userId: string, verified: boolean) {
+  await updateDoc(doc(db, 'users', userId), { verified })
+}
+
+// ═══ REPORT SYSTEM ═══
+
+export async function submitReport(data: { reporterId: string, targetId: string, targetName: string, reason: string, details: string }) {
+  return addDoc(collection(db, 'reports'), {
+    ...data,
+    status: 'pending',
+    createdAt: serverTimestamp(),
+  })
+}
+
+export async function getReports() {
+  const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'), limit(50))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
 }
 
 // Re-export types
